@@ -22,21 +22,16 @@ public class Hood extends FullSubsystem {
 
     private final double TOLERANCE_ROTOR_ROTATIONS = 0.5;
 
-    private double SCORING_HOOD_ANGLE = 0;
-    private double PASSING_HOOD_ANGLE = 0;
-
     public enum WantedState {
         IDLE,
-        SCORING,
-        PASSING
+        UP
     }
 
     public enum SystemState {
         HOME_DOWN,
         HOME_UP,
         IDLE,
-        SCORING,
-        PASSING
+        UP
     }
 
     @Setter
@@ -122,8 +117,7 @@ public class Hood extends FullSubsystem {
 
                 yield SystemState.IDLE;
             }
-            case SCORING -> SystemState.SCORING;
-            case PASSING -> SystemState.PASSING;
+            case UP -> SystemState.UP;
         };
     }
 
@@ -142,14 +136,9 @@ public class Hood extends FullSubsystem {
         io.setBrakeMode(false);
     }
 
-    private void handleScoring() {
-        getSetpointAngle();
-        io.setSetpointRotorRotations(SCORING_HOOD_ANGLE);
-    }
-
-    private void handlePassing() {
-        getSetpointAngle();
-        io.setSetpointRotorRotations(PASSING_HOOD_ANGLE);
+    private void handleUp() {
+        io.setSetpointRotorRotations(Constants.FullExtensionRotorRotations);
+        io.setBrakeMode(true);
     }
 
     /**
@@ -160,14 +149,6 @@ public class Hood extends FullSubsystem {
      */
     public void setVoltage(Voltage volts) {
         io.setVoltage(volts.in(Volts));
-    }
-
-    public double getSetpointAngle() {
-        return switch (systemState) {
-            case SCORING -> SCORING_HOOD_ANGLE = state.calculateScoringState(this).hoodAngle().in(Degrees);
-            case PASSING -> PASSING_HOOD_ANGLE = state.calculatePassingState(this).hoodAngle().in(Degrees);
-            default -> 0;
-        };
     }
 
     public double getSetpointRotorRotations() {
@@ -205,11 +186,8 @@ public class Hood extends FullSubsystem {
             case IDLE:
                 handleIdle();
                 break;
-            case SCORING:
-                handleScoring();
-                break;
-            case PASSING:
-                handlePassing();
+            case UP:
+                handleUp();
                 break;
         }
     }
