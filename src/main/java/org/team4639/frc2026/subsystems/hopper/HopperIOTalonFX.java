@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperfloor;
+package org.team4639.frc2026.subsystems.hopper;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -12,13 +12,13 @@ import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
-public class HopperFloorIOTalonFX implements HopperFloorIO {
+public class HopperIOTalonFX implements HopperIO {
     private final TalonFX hopperFloorMotor;
 
     private final VoltageOut voltageControl = new VoltageOut(0);
     private final VelocityVoltage velocityControl = new VelocityVoltage(0);
 
-    public HopperFloorIOTalonFX(PortConfiguration ports) {
+    public HopperIOTalonFX(PortConfiguration ports) {
         hopperFloorMotor = Phoenix6Factory.createDefaultTalon(ports.hopperFloor, false);
 
         TalonFXConfiguration config = new TalonFXConfiguration();

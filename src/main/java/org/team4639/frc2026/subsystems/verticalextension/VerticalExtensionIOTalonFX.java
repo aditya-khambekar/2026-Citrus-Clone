@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperextension;
+package org.team4639.frc2026.subsystems.verticalextension;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -20,7 +20,7 @@ import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
-public class HopperExtensionIOTalonFX implements HopperExtensionIO {
+public class VerticalExtensionIOTalonFX implements VerticalExtensionIO {
   private final TalonFX hopperExtensionMotor;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
@@ -32,7 +32,7 @@ public class HopperExtensionIOTalonFX implements HopperExtensionIO {
   private final StatusSignal<Voltage> motorVoltage;
   private final StatusSignal<Current> motorCurrent;
 
-  public HopperExtensionIOTalonFX(PortConfiguration ports) {
+  public VerticalExtensionIOTalonFX(PortConfiguration ports) {
     hopperExtensionMotor = Phoenix6Factory.createDefaultTalon(ports.verticalExtension);
 
     config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;

@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.shooter;
+package org.team4639.frc2026.subsystems.drum;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -14,7 +14,7 @@ import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
-public class ShooterIOTalonFX implements ShooterIO {
+public class DrumIOTalonFX implements DrumIO {
     private final TalonFX[] motors; //0->left top, 1->left bottom, 2->right top, 3->right bottom
     private final TalonFX masterMotor;
 
@@ -26,7 +26,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
     private final double SHOOTER_GEAR_RATIO = 1.0;
 
-    public ShooterIOTalonFX(PortConfiguration ports) {
+    public DrumIOTalonFX(PortConfiguration ports) {
         motors = new TalonFX[4];
         for (int i = 0; i < 4; i++) {
             motors[i] = Phoenix6Factory.createDefaultTalon(

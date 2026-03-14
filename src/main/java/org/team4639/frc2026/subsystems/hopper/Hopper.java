@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperfloor;
+package org.team4639.frc2026.subsystems.hopper;
 
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -12,9 +12,9 @@ import org.team4639.lib.util.FullSubsystem;
 
 import static edu.wpi.first.units.Units.Volts;
 
-public class HopperFloor extends FullSubsystem {
+public class Hopper extends FullSubsystem {
     private final RobotState state;
-    private final HopperFloorIO io;
+    private final HopperIO io;
     private final HopperFloorIOInputsAutoLogged inputs = new HopperFloorIOInputsAutoLogged();
 
     private final double KICK_RPM = -400;
@@ -24,7 +24,7 @@ public class HopperFloor extends FullSubsystem {
     private final double unjamTimePeriod = 0.2;
 
     @Getter
-    private final HopperFloorSysID sysID = new HopperFloorSysID.HopperFloorSysIDWPI(this, inputs);
+    private final HopperSysID sysID = new HopperSysID.HopperSysIDWPI(this, inputs);
 
     public enum WantedState {
         IDLE,
@@ -40,7 +40,7 @@ public class HopperFloor extends FullSubsystem {
     private WantedState wantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.IDLE;
 
-    public HopperFloor(HopperFloorIO io, RobotState state) {
+    public Hopper(HopperIO io, RobotState state) {
         this.io = io;
         this.state = state;
 

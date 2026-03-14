@@ -1,10 +1,10 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperfloor;
+package org.team4639.frc2026.subsystems.hopper;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface HopperFloorIO {
+public interface HopperIO {
 
     default void setVoltage(double appliedVolts) {}
 

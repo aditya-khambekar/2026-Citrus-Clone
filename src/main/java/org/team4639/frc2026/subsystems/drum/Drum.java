@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.shooter;
+package org.team4639.frc2026.subsystems.drum;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Voltage;
@@ -16,9 +16,9 @@ import org.team4639.lib.util.LoggedTunableNumber;
 
 import static edu.wpi.first.units.Units.Volts;
 
-public class Shooter extends FullSubsystem {
+public class Drum extends FullSubsystem {
     private final RobotState state;
-    private final ShooterIO io;
+    private final DrumIO io;
     private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
     private double PASSING_RPM = 0;
@@ -34,7 +34,7 @@ public class Shooter extends FullSubsystem {
     private final LoggedTunableNumber desiredRPM = new LoggedTunableNumber("Desired RPM").initDefault(0);
 
     @Getter
-    private final ShooterSysID sysID = new ShooterSysID.ShooterSysIDWPI(this, inputs);
+    private final DrumSysID sysID = new DrumSysID.DrumSysIDWPI(this, inputs);
 
     public enum WantedState {
         OFF,
@@ -55,7 +55,7 @@ public class Shooter extends FullSubsystem {
     private WantedState wantedState = WantedState.OFF;
     private SystemState systemState = SystemState.OFF;
 
-    public Shooter(ShooterIO io, RobotState state) {
+    public Drum(DrumIO io, RobotState state) {
         this.io = io;
         this.state = state;
 
@@ -143,7 +143,7 @@ public class Shooter extends FullSubsystem {
     /**
      * Should not be called in comp code. All usages of
      * setVoltage() needed for comp should be called internally.
-     * @param volts voltage to set shooter motors to
+     * @param volts voltage to set drum motors to
      */
     protected void setVoltage(Voltage volts) {
         io.setVoltage(volts.in(Volts));

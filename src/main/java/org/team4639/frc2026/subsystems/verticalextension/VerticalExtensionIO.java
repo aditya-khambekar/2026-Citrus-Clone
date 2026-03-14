@@ -1,10 +1,10 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperextension;
+package org.team4639.frc2026.subsystems.verticalextension;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface HopperExtensionIO {
+public interface VerticalExtensionIO {
   default void setSetpointRotorRotations(double rotorRotations) {}
 
   default void setVoltage(double volts) {}

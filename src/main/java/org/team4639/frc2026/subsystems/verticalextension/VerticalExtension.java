@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.subsystems.hopperextension;
+package org.team4639.frc2026.subsystems.verticalextension;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Voltage;
@@ -13,9 +13,9 @@ import org.team4639.lib.util.LoggedTunableNumber;
 
 import static edu.wpi.first.units.Units.Volts;
 
-public class HopperExtension extends FullSubsystem {
+public class VerticalExtension extends FullSubsystem {
     private final RobotState state;
-    private final HopperExtensionIO io;
+    private final VerticalExtensionIO io;
     private final HopperExtensionIOInputsAutoLogged inputs = new HopperExtensionIOInputsAutoLogged();
 
     private double HOME_VOLTAGE = -3;
@@ -40,7 +40,7 @@ public class HopperExtension extends FullSubsystem {
 
     private WantedState lastZeroedWantedState = wantedState;
 
-    public HopperExtension(HopperExtensionIO io, RobotState state) {
+    public VerticalExtension(VerticalExtensionIO io, RobotState state) {
         this.io = io;
         this.state = state;
 
