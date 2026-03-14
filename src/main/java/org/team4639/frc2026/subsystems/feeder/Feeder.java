@@ -1,0 +1,142 @@
+/* Copyright (c) 2025-2026 FRC 4639. */
+
+package org.team4639.frc2026.subsystems.feeder;
+
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import lombok.Getter;
+import org.littletonrobotics.junction.Logger;
+import org.team4639.frc2026.RobotState;
+import org.team4639.lib.util.FullSubsystem;
+
+import static edu.wpi.first.units.Units.Volts;
+
+public class Feeder extends FullSubsystem {
+    private final RobotState state;
+    private final FeederIO io;
+    private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
+
+    private final double KICK_RPM = -400;
+    private final double IDLE_RPM = 0;
+
+    private double unjamStartTime = Double.NaN;
+    private final double unjamTimePeriod = 0.2;
+
+    @Getter
+    private final FeederSysID sysID = new FeederSysID.FeederSysIDWPI(this, inputs);
+
+    public enum WantedState {
+        IDLE,
+        SPIN
+    }
+
+    public enum SystemState {
+        IDLE,
+        SPIN,
+        UNJAM
+    }
+
+    private WantedState wantedState = WantedState.IDLE;
+    private SystemState systemState = SystemState.IDLE;
+
+    public Feeder(FeederIO io, RobotState state) {
+        this.io = io;
+        this.state = state;
+
+        Logger.recordOutput("Feeder/SystemState", systemState.toString());
+        this.setDefaultCommand(this.run(this::runStateMachine));
+    }
+
+    @Override
+    public void periodicBeforeScheduler() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Feeder", inputs);
+    }
+
+    @Override
+    public void periodic() {
+
+    }
+
+    @Override
+    public void periodicAfterScheduler() {
+//        state.setFeederStates(new Pair<>(this.wantedState, this.systemState));
+//        state.acceptCANMeasurement(inputs.motorConnected);
+//        state.acceptTemperatureMeasurement(inputs.motorTemperature);
+    }
+
+    private void runStateMachine() {
+        SystemState newState = handleStateTransitions();
+        if (newState != systemState) {
+            Logger.recordOutput("Feeder/SystemState", newState.toString());
+            systemState = newState;
+        }
+
+        if (DriverStation.isDisabled()) {
+            systemState = SystemState.IDLE;
+        }
+
+        switch (systemState) {
+            case IDLE:
+                handleIdle();
+                break;
+            case SPIN:
+                handleKick();
+                break;
+            case UNJAM:
+                handleUnjam();
+                break;
+        }
+    }
+
+    private SystemState handleStateTransitions() {
+        return switch (wantedState) {
+            case IDLE -> SystemState.IDLE;
+            case SPIN -> {
+                switch(systemState){
+                    case IDLE -> {
+                        yield SystemState.SPIN;
+                    }
+                    case SPIN -> {
+                        if (Math.abs(inputs.motorCurrent) > 70){
+                            unjamStartTime = Timer.getTimestamp();
+                            yield SystemState.UNJAM;
+                        } else {
+                            yield SystemState.SPIN;
+                        }
+                    }
+                    case UNJAM -> {
+                        if (Timer.getTimestamp() - unjamStartTime >= unjamTimePeriod){
+                            yield SystemState.SPIN;
+                        } else {
+                            yield SystemState.IDLE;
+                        }
+                    }
+                }
+                yield SystemState.SPIN;
+
+            }
+        };
+    }
+
+    private void handleIdle() {
+        io.setRotorVelocityRPM(IDLE_RPM);
+    }
+
+    private void handleKick() {
+        io.setRotorVelocityRPM(KICK_RPM);
+    }
+
+    public void setWantedState(WantedState wantedState) {
+        this.wantedState = wantedState;
+    }
+
+    protected void setVoltage(Voltage volts){
+        io.setVoltage(volts.in(Volts));
+    }
+
+    private void handleUnjam() {
+        io.setRotorVelocityRPM(-KICK_RPM);
+    }
+}

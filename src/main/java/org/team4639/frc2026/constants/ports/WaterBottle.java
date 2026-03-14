@@ -20,5 +20,6 @@ public class WaterBottle {
     portConfiguration.rightTopDrum = new CanDeviceId(28);
     portConfiguration.leftBottomDrum = new CanDeviceId(29);
     portConfiguration.rightBottomDrum = new CanDeviceId(30);
+    portConfiguration.hopperFloor = new CanDeviceId(31);
   }
 }
