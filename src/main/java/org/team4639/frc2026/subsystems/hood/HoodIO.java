@@ -5,31 +5,27 @@ package org.team4639.frc2026.subsystems.hood;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface HoodIO {
-    default void setSetpointRotorRotations(double rotorRotations) {
+    default void setSetpointMechanismRotations(double mechanismRotations) {
     }
 
     default void setVoltage(double volts) {
     }
 
+    default void setSetpointMechanismRotations(double mechanismRotations, double mechanismRotationsPerSecond) {}
+
     default void updateInputs(HoodIOInputs inputs) {
     }
 
-    default void applyNewGains() {
-    }
-
-    default void setPositionRotorRotations(double rotorRotations) {
-    }
-
-    default void setBrakeMode(boolean brake) {
+    default void setPositionMechanismRotations(double mechanismRotations) {
     }
 
     @AutoLog
     class HoodIOInputs {
-        public boolean hoodMotorConnected = true;
-        public double hoodVoltage = 0.0;
-        public double hoodCurrent = 0.0;
-        public double hoodTemperature = 0.0;
-        public double hoodPositionRotorRotations = 0.0;
-        public double hoodVelocityRotorRotations = 0.0;
+        public boolean connected = true;
+        public double volts = 0.0;
+        public double amps = 0.0;
+        public double celsius = 0.0;
+        public double mechanismRotations = 0.0;
+        public double mechanismRotationsPerSecond = 0.0;
     }
 }

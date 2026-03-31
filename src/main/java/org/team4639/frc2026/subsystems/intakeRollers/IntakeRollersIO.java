@@ -7,26 +7,25 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeRollersIO {
   @AutoLog
   public static class IntakeRollersIOInputs {
-    public double leftVoltage;
+    public double leftVolts;
     public double leftAmps;
-    public double leftCurrent;
-    public double leftTemperature;
-    public double leftVelocity;
+    public double leftCelsius;
+    public double leftMechanismRotationsPerSecond;
+    public double leftMechanismRotations;
 
-    public double rightVoltage;
+    public double rightVolts;
     public double rightAmps;
-    public double rightCurrent;
-    public double rightTemperature;
-    public double rightVelocity;
+    public double rightCelsius;
+    public double rightMechanismRotationsPerSecond;
+    public double rightMechanismRotations;
 
-    public boolean connected = true;
+    public boolean leftConnected;
+    public boolean rightConnected;
   }
 
   default void setVoltage(double volts) {}
 
-  default void setRotorVelocity(double velocity) {}
-
-  default void stop() {}
+  default void setSetpointMechanismRotationsPerSecond(double mechanismRotationsPerSecond) {}
 
   default void updateInputs(IntakeRollersIOInputs inputs) {}
 }

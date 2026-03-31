@@ -1,6 +1,5 @@
 package org.team4639.frc2026.subsystems.pivot;
 
-import jdk.jfr.Percentage;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
@@ -12,7 +11,7 @@ public class Pivot extends FullSubsystem {
     private final RobotState state;
 
     @Setter
-    private double MANUAL_POSITION = PivotConstants.IDLE_MECHANISM_ROTATIONS;
+    private double manualMechanismRotations = PivotConstants.IDLE_MECHANISM_ROTATIONS;
 
     public Pivot(PivotIO io, RobotState state) {
         this.io = io;
@@ -100,14 +99,14 @@ public class Pivot extends FullSubsystem {
     }
 
     private void handleDown() {
-        io.setPosition(PivotConstants.DOWN_MECHANISM_ROTATIONS);
+        io.setSetpointMechanismRotations(PivotConstants.DOWN_MECHANISM_ROTATIONS);
     }
 
     private void handleIdle() {
-        io.setPosition(PivotConstants.IDLE_MECHANISM_ROTATIONS);
+        io.setSetpointMechanismRotations(PivotConstants.IDLE_MECHANISM_ROTATIONS);
     }
 
     private void handleManual() {
-        io.setPosition(MANUAL_POSITION);
+        io.setSetpointMechanismRotations(manualMechanismRotations);
     }
 }

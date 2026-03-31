@@ -3,59 +3,50 @@
 package org.team4639.frc2026.subsystems.hopper;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
 public class HopperIOTalonFX implements HopperIO {
-    private final TalonFX hopperFloorMotor;
+    private final TalonFX hopperMotor;
 
-    private final VoltageOut voltageControl = new VoltageOut(0);
-    private final VelocityVoltage velocityControl = new VelocityVoltage(0);
+    private final VoltageOut voltageOut;
+    private final VelocityVoltage velocityVoltage;
 
     public HopperIOTalonFX(PortConfiguration ports) {
-        hopperFloorMotor = Phoenix6Factory.createDefaultTalon(ports.hopperFloor, false);
+        hopperMotor = Phoenix6Factory.createDefaultTalon(ports.hopperFloor, false);
 
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.SupplyCurrentLimit = 40;
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 80;
-        config.Slot0.kV = 0;
-        config.Slot0.kA = 0;
-        //config.Slot0.kP = 1;
+        PhoenixUtil.tryUntilOk(5, () -> hopperMotor.getConfigurator().apply(HopperConfigs.hopperConfig));
 
-        PhoenixUtil.tryUntilOk(5, () -> hopperFloorMotor.getConfigurator().apply(config));
+        voltageOut = new VoltageOut(0);
+        velocityVoltage = new VelocityVoltage(0);
     }
 
     @Override
-    public void updateInputs(HopperFloorIOInputs inputs) {
-        inputs.motorConnected = BaseStatusSignal.refreshAll(
-                hopperFloorMotor.getMotorVoltage(),
-                hopperFloorMotor.getStatorCurrent(),
-                hopperFloorMotor.getVelocity(),
-                hopperFloorMotor.getDeviceTemp()
+    public void updateInputs(HopperIOInputs inputs) {
+        inputs.connected = BaseStatusSignal.refreshAll(
+                hopperMotor.getMotorVoltage(),
+                hopperMotor.getStatorCurrent(),
+                hopperMotor.getVelocity(),
+                hopperMotor.getDeviceTemp()
         ).isOK();
-        inputs.motorVoltage = hopperFloorMotor.getMotorVoltage().getValueAsDouble();
-        inputs.motorCurrent = hopperFloorMotor.getStatorCurrent().getValueAsDouble();
-        inputs.motorVelocity = hopperFloorMotor.getVelocity().getValueAsDouble();
-        inputs.motorTemperature = hopperFloorMotor.getDeviceTemp().getValueAsDouble();
-        inputs.motorPosition = hopperFloorMotor.getPosition().getValueAsDouble();
+        inputs.volts = hopperMotor.getMotorVoltage().getValueAsDouble();
+        inputs.amps = hopperMotor.getStatorCurrent().getValueAsDouble();
+        inputs.mechanismRotationsPerSecond = hopperMotor.getVelocity().getValueAsDouble();
+        inputs.celsius = hopperMotor.getDeviceTemp().getValueAsDouble();
+        inputs.mechanismRotations = hopperMotor.getPosition().getValueAsDouble();
     }
 
     @Override
     public void setVoltage(double appliedVoltage)  {
-        hopperFloorMotor.setControl(voltageControl.withOutput(appliedVoltage));
+        hopperMotor.setControl(voltageOut.withOutput(appliedVoltage));
     }
 
     @Override
-    public void setRotorVelocityRPM(double targetVelocity) {
-        hopperFloorMotor.setControl(velocityControl.withVelocity(targetVelocity * 12 / 24 / 60));
+    public void setSetpointMechanismRotationsPerSecond(double mechanismRotationsPerSecond) {
+        hopperMotor.setControl(velocityVoltage.withVelocity(mechanismRotationsPerSecond));
     }
 }

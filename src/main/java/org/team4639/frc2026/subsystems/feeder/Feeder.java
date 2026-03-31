@@ -17,24 +17,22 @@ public class Feeder extends FullSubsystem {
     private final FeederIO io;
     private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
-    private final double KICK_RPM = -400;
-    private final double IDLE_RPM = 0;
-
-    private double unjamStartTime = Double.NaN;
-    private final double unjamTimePeriod = 0.2;
-
     @Getter
     private final FeederSysID sysID = new FeederSysID.FeederSysIDWPI(this, inputs);
 
+    private record FeederSetpoint(double mechanismRotationsPerSecond, double mechanismRotationsPerSecondPerSecond) {
+        static FeederSetpoint IDLE = new FeederSetpoint(0.0, 0.0);
+    }
+
     public enum WantedState {
         IDLE,
-        SPIN
+        FEED_PASSING,
+        FEED_SCORING
     }
 
     public enum SystemState {
         IDLE,
-        SPIN,
-        UNJAM
+        FEED
     }
 
     private WantedState wantedState = WantedState.IDLE;
@@ -61,9 +59,29 @@ public class Feeder extends FullSubsystem {
 
     @Override
     public void periodicAfterScheduler() {
-//        state.setFeederStates(new Pair<>(this.wantedState, this.systemState));
-//        state.acceptCANMeasurement(inputs.motorConnected);
-//        state.acceptTemperatureMeasurement(inputs.motorTemperature);
+
+    }
+
+    public FeederSetpoint getSetpoint() {
+        return switch(wantedState) {
+            case IDLE -> FeederSetpoint.IDLE;
+            case FEED_PASSING -> {
+                double currentDrumRPS = state.getPassingSetpoint(this).drumRotationsPerMinute() / 60.0;
+                double nextDrumRPS = state.getNextPassingSetpoint(this).drumRotationsPerMinute() / 60.0;
+
+                double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
+
+                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM, drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM);
+            }
+            case FEED_SCORING -> {
+                double currentDrumRPS = state.getScoringSetpoint(this).drumRotationsPerMinute() / 60.0;
+                double nextDrumRPS = state.getNextScoringSetpoint(this).drumRotationsPerMinute() / 60.0;
+
+                double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
+
+                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM, drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM);
+            }
+        };
     }
 
     private void runStateMachine() {
@@ -81,11 +99,8 @@ public class Feeder extends FullSubsystem {
             case IDLE:
                 handleIdle();
                 break;
-            case SPIN:
-                handleKick();
-                break;
-            case UNJAM:
-                handleUnjam();
+            case FEED:
+                handleFeed();
                 break;
         }
     }
@@ -93,39 +108,17 @@ public class Feeder extends FullSubsystem {
     private SystemState handleStateTransitions() {
         return switch (wantedState) {
             case IDLE -> SystemState.IDLE;
-            case SPIN -> {
-                switch(systemState){
-                    case IDLE -> {
-                        yield SystemState.SPIN;
-                    }
-                    case SPIN -> {
-                        if (Math.abs(inputs.motorCurrent) > 70){
-                            unjamStartTime = Timer.getTimestamp();
-                            yield SystemState.UNJAM;
-                        } else {
-                            yield SystemState.SPIN;
-                        }
-                    }
-                    case UNJAM -> {
-                        if (Timer.getTimestamp() - unjamStartTime >= unjamTimePeriod){
-                            yield SystemState.SPIN;
-                        } else {
-                            yield SystemState.IDLE;
-                        }
-                    }
-                }
-                yield SystemState.SPIN;
-
-            }
+            case FEED_PASSING, FEED_SCORING -> SystemState.FEED;
         };
     }
 
     private void handleIdle() {
-        io.setRotorVelocityRPM(IDLE_RPM);
+        io.setSetpointMechanismRotationsPerSecond(FeederConstants.IDLE_MECHANISM_RPM);
     }
 
-    private void handleKick() {
-        io.setRotorVelocityRPM(KICK_RPM);
+    private void handleFeed() {
+        var setpoint = getSetpoint();
+        io.setSetpointMechanismRotationsPerSecond(setpoint.mechanismRotationsPerSecond, setpoint.mechanismRotationsPerSecondPerSecond);
     }
 
     public void setWantedState(WantedState wantedState) {
@@ -134,9 +127,5 @@ public class Feeder extends FullSubsystem {
 
     protected void setVoltage(Voltage volts){
         io.setVoltage(volts.in(Volts));
-    }
-
-    private void handleUnjam() {
-        io.setRotorVelocityRPM(-KICK_RPM);
     }
 }

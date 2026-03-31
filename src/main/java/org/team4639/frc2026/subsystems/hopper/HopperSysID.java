@@ -32,7 +32,7 @@ public sealed class HopperSysID {
     }
 
     public static final class HopperSysIDWPI extends HopperSysID {
-        public HopperSysIDWPI(Hopper hopper, HopperIO.HopperFloorIOInputs inputs){
+        public HopperSysIDWPI(Hopper hopper, HopperIO.HopperIOInputs inputs){
             super.routine = new SysIdRoutine(
                     new SysIdRoutine.Config(
                             Volts.per(Second).of(0.5),
@@ -44,9 +44,9 @@ public sealed class HopperSysID {
                             hopper::setVoltage,
                             log -> {
                                 log.motor("HopperFloor")
-                                        .angularPosition(Rotations.of(inputs.motorPosition))
-                                        .angularVelocity(Rotations.of(inputs.motorVelocity).per(Second))
-                                        .voltage(Volts.of(inputs.motorVoltage));
+                                        .angularPosition(Rotations.of(inputs.mechanismRotations))
+                                        .angularVelocity(Rotations.of(inputs.mechanismRotationsPerSecond).per(Second))
+                                        .voltage(Volts.of(inputs.volts));
                             }, // SignalLogger handles logging
                             hopper
                     )

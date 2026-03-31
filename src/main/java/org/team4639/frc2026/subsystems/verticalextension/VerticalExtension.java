@@ -3,42 +3,59 @@
 package org.team4639.frc2026.subsystems.verticalextension;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
+import org.team4639.frc2026.util.ValueCacher;
 import org.team4639.lib.util.FullSubsystem;
-import org.team4639.lib.util.LoggedTunableNumber;
+
+import java.util.Objects;
 
 import static edu.wpi.first.units.Units.Volts;
 
 public class VerticalExtension extends FullSubsystem {
     private final RobotState state;
     private final VerticalExtensionIO io;
-    private final HopperExtensionIOInputsAutoLogged inputs = new HopperExtensionIOInputsAutoLogged();
-
-    private double HOME_VOLTAGE = -3;
-
-    private final double TOLERANCE_ROTOR_ROTATIONS = 0.5;
+    private final VerticalExtensionIOInputsAutoLogged inputs = new VerticalExtensionIOInputsAutoLogged();
 
     public enum WantedState {
         IDLE,
-        UP
+        UP,
+        MANUAL
     }
 
     public enum SystemState {
-        HOME_DOWN,
         HOME_UP,
+        HOME_DOWN, // only done on startup, when there are not enough balls to fill hopper
+        STUCK, // trying to go down, but too many balls
         IDLE,
-        UP
+        UP,
+        MANUAL
     }
 
     @Setter
     private WantedState wantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.HOME_DOWN;
 
-    private WantedState lastZeroedWantedState = wantedState;
+    @Setter
+    private double manualRotorRotations = VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS;
+
+    private boolean beenHomedDown = false;
+    private boolean beenHomedUp = false;
+
+    private final Debouncer isStuckDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+
+    private final ValueCacher<Object, Double> setpointCalculator = new ValueCacher<>(() -> {
+        return switch (wantedState) {
+            case IDLE -> VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS;
+            case UP -> VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS;
+            case MANUAL -> manualRotorRotations;
+        };
+    });
 
     public VerticalExtension(VerticalExtensionIO io, RobotState state) {
         this.io = io;
@@ -46,99 +63,92 @@ public class VerticalExtension extends FullSubsystem {
 
         this.setDefaultCommand(this.run(this::runStateMachine));
 
-        Logger.recordOutput("hopperExtension/SystemState", systemState.toString());
+        Logger.recordOutput("VerticalExtension/SystemState", systemState.toString());
     }
 
     @Override
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
-        Logger.processInputs("HopperExtension", inputs);
+        Logger.processInputs("VerticalExtension", inputs);
     }
 
     @Override
     public void periodic() {
-        if (org.team4639.frc2026.Constants.tuningMode) {
-            LoggedTunableNumber.ifChanged(
-                    hashCode(),
-                    io::applyNewGains,
-                    PIDs.hopperExtensionKp,
-                    PIDs.hopperExtensionKi,
-                    PIDs.hopperExtensionKd,
-                    PIDs.hopperExtensionKs,
-                    PIDs.hopperExtensionKv,
-                    PIDs.hopperExtensionKa,
-                    PIDs.hopperExtensionKpSim,
-                    PIDs.hopperExtensionKiSim,
-                    PIDs.hopperExtensionKdSim);
-        }
 
-        if (this.systemState != SystemState.HOME_UP && this.systemState != SystemState.HOME_DOWN) {
-            if (Math.abs(this.inputs.hopperExtensionCurrent) >= 12.0) {
-                if (this.inputs.hopperExtensionVoltage < 0) {
-                    io.setPositionRotorRotations(0);
-                } else {
-                    io.setPositionRotorRotations(Constants.FullExtensionRotorRotations);
-                }
-            }
-        }
     }
 
     @Override
     public void periodicAfterScheduler() {
-        //    state.setHopperExtensionStates(new Pair<>(wantedState, systemState));
-        //    state.accept(inputs);
-        //
-        //    state.acceptCANMeasurement(inputs.hopperExtensionMotorConnected);
-        //    state.acceptTemperatureMeasurement(inputs.pivotTemperature);
+        state.acceptCANMeasurement(inputs.connected);
+        state.acceptTemperatureMeasurement(inputs.celsius);
     }
 
     private SystemState handleStateTransitions() {
         return switch (wantedState) {
             case IDLE -> {
-                if (systemState == SystemState.HOME_DOWN) {
-                    if (Math.abs(inputs.hopperExtensionCurrent) > 19.0) {
-                        io.setPositionRotorRotations(0);
-                        lastZeroedWantedState = WantedState.IDLE;
-                        yield SystemState.IDLE;
-                    } else {
-                        yield SystemState.HOME_DOWN;
-                    }
+                switch (systemState) {
+                    case HOME_DOWN:
+                        if (Math.abs(inputs.amps) > VerticalExtensionConstants.ZERO_CURRENT) {
+                            this.beenHomedDown = true;
+                            io.setPositionRotorRotations(VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS);
+                            yield SystemState.IDLE;
+                        } else yield SystemState.HOME_DOWN;
+                    case IDLE:
+                        if (!atSetpoint() && isStuckDebouncer.calculate(MathUtil.isNear(0, inputs.rotorRotationsPerSecond, 0.1))) {
+                            yield SystemState.STUCK;
+                        } else yield SystemState.IDLE;
+                    case STUCK:
+                        yield SystemState.STUCK; // only way to get unstuck is to change the wanted state, handled by code
+                        default:
+                            if (!beenHomedDown) yield SystemState.HOME_DOWN;
+                            else yield SystemState.IDLE;
                 }
-
-                if (systemState == SystemState.HOME_UP) {
-                    if (Math.abs(inputs.hopperExtensionCurrent) > 19.0) {
-                        io.setPositionRotorRotations(Constants.FullExtensionRotorRotations);
-                        lastZeroedWantedState = WantedState.IDLE;
-                        yield SystemState.IDLE;
-                    } else {
-                        yield SystemState.HOME_UP;
-                    }
-                }
-
-                yield SystemState.IDLE;
             }
-            case UP -> SystemState.UP;
+            case UP -> {
+                if (systemState == SystemState.HOME_UP) {
+                    if (Math.abs(inputs.amps) > VerticalExtensionConstants.ZERO_CURRENT) {
+                        this.beenHomedUp = true;
+                        io.setPositionRotorRotations(VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS);
+                        yield SystemState.UP;
+                    } else yield SystemState.HOME_UP;
+                }
+                if (!beenHomedUp) yield SystemState.HOME_UP;
+                else yield SystemState.UP;
+            }
+            case MANUAL -> SystemState.MANUAL;
         };
     }
 
-    private void handleHomeDown() {
-        io.setVoltage(HOME_VOLTAGE);
-        io.setBrakeMode(false);
+    public double getSetpointRotations() {
+        return setpointCalculator.get(0b0);
     }
 
-    private void handleHomeUp() {
-        io.setVoltage(-HOME_VOLTAGE);
-        io.setBrakeMode(true);
+    public boolean atSetpoint() {
+        return MathUtil.isNear(setpointCalculator.get(0b1), inputs.rotorRotations, VerticalExtensionConstants.TOLERANCE_ROTOR_ROTATIONS);
     }
 
     private void handleIdle() {
-        io.setSetpointRotorRotations(0);
-        io.setBrakeMode(false);
+        io.setSetpointRotorRotations(VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS);
     }
 
     private void handleUp() {
-        io.setSetpointRotorRotations(Constants.FullExtensionRotorRotations);
-        io.setBrakeMode(true);
+        io.setSetpointRotorRotations(VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS);
+    }
+
+    private void handleHomeUp() {
+        io.setVoltage(VerticalExtensionConstants.ZERO_VOLTAGE);
+    }
+
+    private void handleHomeDown() {
+        io.setVoltage(-VerticalExtensionConstants.ZERO_VOLTAGE);
+    }
+
+    private void handleStuck() {
+        io.setVoltage(0);
+    }
+
+    private void handleManual() {
+        io.setSetpointRotorRotations(manualRotorRotations);
     }
 
     /**
@@ -151,19 +161,6 @@ public class VerticalExtension extends FullSubsystem {
         io.setVoltage(volts.in(Volts));
     }
 
-    public double getSetpointRotorRotations() {
-        return switch (systemState) {
-            case IDLE, HOME_DOWN -> 0;
-            case UP, HOME_UP -> Constants.FullExtensionRotorRotations;
-        };
-    }
-
-    public boolean atSetpoint() {
-        return MathUtil.isNear(
-                getSetpointRotorRotations(),
-                inputs.hopperExtensionPositionDegrees,
-                TOLERANCE_ROTOR_ROTATIONS);
-    }
 
     private void runStateMachine() {
         SystemState newState = handleStateTransitions();
@@ -177,17 +174,23 @@ public class VerticalExtension extends FullSubsystem {
         }
 
         switch (systemState) {
-            case HOME_DOWN:
+            case HOME_DOWN: 
                 handleHomeDown();
                 break;
             case HOME_UP:
                 handleHomeUp();
                 break;
+            case UP:
+                handleUp();
+                break;
             case IDLE:
                 handleIdle();
                 break;
-            case UP:
-                handleUp();
+            case STUCK:
+                handleStuck();
+                break;
+            case MANUAL:
+                handleManual();
                 break;
         }
     }

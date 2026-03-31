@@ -4,111 +4,77 @@ package org.team4639.frc2026.subsystems.verticalextension;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
 public class VerticalExtensionIOTalonFX implements VerticalExtensionIO {
-  private final TalonFX hopperExtensionMotor;
+  private final TalonFX verticalExtension;
 
-  private final TalonFXConfiguration config = new TalonFXConfiguration();
+  private final PositionVoltage positionVoltage;
+  private final VoltageOut voltageOut;
 
-  private final PositionVoltage request = new PositionVoltage(0);
-
-  private final StatusSignal<Angle> hopperExtensionPosition;
-  private final StatusSignal<AngularVelocity> hopperExtensionVelocity;
-  private final StatusSignal<Voltage> motorVoltage;
-  private final StatusSignal<Current> motorCurrent;
+  private final StatusSignal<Angle> rotorRotations;
+  private final StatusSignal<AngularVelocity> rotorRotationsPerSecond;
+  private final StatusSignal<Voltage> volts;
+  private final StatusSignal<Current> amps;
+  private final StatusSignal<Temperature> celsius;
 
   public VerticalExtensionIOTalonFX(PortConfiguration ports) {
-    hopperExtensionMotor = Phoenix6Factory.createDefaultTalon(ports.verticalExtension);
+    verticalExtension = Phoenix6Factory.createDefaultTalon(ports.verticalExtension);
 
-    config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-    // do NOT change this
-    config.CurrentLimits.SupplyCurrentLimit = 20.0;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.StatorCurrentLimit = 20;
-    config.Audio.BeepOnConfig = false;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.ClosedLoopGeneral.ContinuousWrap = true;
+    PhoenixUtil.tryUntilOk(5, () -> verticalExtension.getConfigurator().apply(VerticalExtensionConfigs.verticalExtensionConfig));
 
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    rotorRotations = verticalExtension.getRotorPosition();
+    rotorRotationsPerSecond = verticalExtension.getRotorVelocity();
+    volts = verticalExtension.getMotorVoltage();
+    amps = verticalExtension.getStatorCurrent();
+    celsius = verticalExtension.getDeviceTemp();
 
-    config.Slot0.kP = 0;
-    applyNewGains();
-
-    hopperExtensionPosition = hopperExtensionMotor.getPosition();
-    hopperExtensionVelocity = hopperExtensionMotor.getVelocity();
-    motorVoltage = hopperExtensionMotor.getMotorVoltage();
-    motorCurrent = hopperExtensionMotor.getStatorCurrent();
+    voltageOut = new VoltageOut(0);
+    positionVoltage = new PositionVoltage(0);
   }
 
   @Override
   public void setSetpointRotorRotations(double setpointRotorRotations) {
-    request.Position = Units.degreesToRotations(setpointRotorRotations);
-    hopperExtensionMotor.setControl(request);
-    Logger.recordOutput("hopperExtension Controller Setpoint", request.Position);
+    positionVoltage.Position = Units.degreesToRotations(setpointRotorRotations);
+    verticalExtension.setControl(positionVoltage);
+    Logger.recordOutput("hopperExtension Controller Setpoint", positionVoltage.Position);
   }
 
   @Override
-  public void updateInputs(HopperExtensionIOInputs inputs) {
-    inputs.hopperExtensionMotorConnected =
+  public void updateInputs(VerticalExtensionIOInputs inputs) {
+    inputs.connected =
         BaseStatusSignal.refreshAll(
-                motorVoltage,
-                motorCurrent,
-                hopperExtensionMotor.getDeviceTemp(),
-                hopperExtensionVelocity,
-                hopperExtensionPosition)
+                volts, amps,
+                celsius, rotorRotationsPerSecond, rotorRotations)
             .isOK();
-    inputs.hopperExtensionVoltage = motorVoltage.getValueAsDouble();
-    inputs.hopperExtensionCurrent = motorCurrent.getValueAsDouble();
-    inputs.hopperExtensionTemperature = hopperExtensionMotor.getDeviceTemp().getValueAsDouble();
-    inputs.hopperExtensionPositionDegrees = hopperExtensionPosition.getValueAsDouble() * 360;
-    inputs.hopperExtensionVelocityDegrees = hopperExtensionVelocity.getValueAsDouble() * 360;
-
-    Logger.recordOutput("hopperExtension Rotations", hopperExtensionPosition.getValueAsDouble());
+    inputs.volts = volts.getValueAsDouble();
+    inputs.amps = amps.getValueAsDouble();
+    inputs.celsius = celsius.getValueAsDouble();
+    inputs.rotorRotations = rotorRotations.getValueAsDouble();
+    inputs.rotorRotationsPerSecond = rotorRotationsPerSecond.getValueAsDouble();
   }
 
   @Override
   public void setVoltage(double volts) {
-    hopperExtensionMotor.setVoltage(volts);
-  }
-
-  public void updateGains() {
-    config.Slot0.kP = PIDs.hopperExtensionKp.get();
-    config.Slot0.kI = PIDs.hopperExtensionKi.get();
-    config.Slot0.kD = PIDs.hopperExtensionKd.get();
-    config.Slot0.kS = PIDs.hopperExtensionKs.get();
-    config.Slot0.kV = PIDs.hopperExtensionKv.get();
-    config.Slot0.kA = PIDs.hopperExtensionKa.get();
-  }
-
-  @Override
-  public void applyNewGains() {
-    updateGains();
-    PhoenixUtil.tryUntilOk(5, () -> hopperExtensionMotor.getConfigurator().apply(config));
+    verticalExtension.setVoltage(volts);
   }
 
   @Override
   public void setPositionRotorRotations(double rotorRotations) {
-    hopperExtensionMotor.setPosition(rotorRotations);
+    verticalExtension.setPosition(rotorRotations);
   }
 
   @Override
-  public void setBrakeMode(boolean brake) {
-    hopperExtensionMotor.setNeutralMode(brake ? NeutralModeValue.Brake : NeutralModeValue.Coast);
+  public void setBrakeMode(boolean isBrakeMode) {
+    verticalExtension.setNeutralMode(isBrakeMode ? NeutralModeValue.Brake : NeutralModeValue.Coast);
   }
 }

@@ -32,7 +32,7 @@ public final class Constants {
     public static final double ROBOT_MASS_KG = 50;
     public static final double ROBOT_MOI = 3.97;
     public static final double WHEEL_COF = 1.5;
-  }
 
-  public static final class SimConstants {}
+    public static final Transform2d ORIGIN_TO_DRUM = new Transform2d(0, -0.254, Rotation2d.k180deg);
+  }
 }

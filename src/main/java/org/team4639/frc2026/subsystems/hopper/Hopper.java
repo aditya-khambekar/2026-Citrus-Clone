@@ -15,10 +15,7 @@ import static edu.wpi.first.units.Units.Volts;
 public class Hopper extends FullSubsystem {
     private final RobotState state;
     private final HopperIO io;
-    private final HopperFloorIOInputsAutoLogged inputs = new HopperFloorIOInputsAutoLogged();
-
-    private final double KICK_RPM = -400;
-    private final double IDLE_RPM = 0;
+    private final HopperIOInputsAutoLogged inputs = new HopperIOInputsAutoLogged();
 
     private double unjamStartTime = Double.NaN;
     private final double unjamTimePeriod = 0.2;
@@ -28,12 +25,12 @@ public class Hopper extends FullSubsystem {
 
     public enum WantedState {
         IDLE,
-        SPIN
+        ON
     }
 
     public enum SystemState {
         IDLE,
-        SPIN,
+        ON,
         UNJAM
     }
 
@@ -44,14 +41,14 @@ public class Hopper extends FullSubsystem {
         this.io = io;
         this.state = state;
 
-        Logger.recordOutput("HopperFloor/SystemState", systemState.toString());
+        Logger.recordOutput("Hopper/SystemState", systemState.toString());
         this.setDefaultCommand(this.run(this::runStateMachine));
     }
 
     @Override
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
-        Logger.processInputs("HopperFloor", inputs);
+        Logger.processInputs("Hopper", inputs);
     }
 
     @Override
@@ -61,15 +58,14 @@ public class Hopper extends FullSubsystem {
 
     @Override
     public void periodicAfterScheduler() {
-//        state.setHopperFloorStates(new Pair<>(this.wantedState, this.systemState));
-//        state.acceptCANMeasurement(inputs.motorConnected);
-//        state.acceptTemperatureMeasurement(inputs.motorTemperature);
+        state.acceptCANMeasurement(inputs.connected);
+        state.acceptTemperatureMeasurement(inputs.celsius);
     }
 
     private void runStateMachine() {
         SystemState newState = handleStateTransitions();
         if (newState != systemState) {
-            Logger.recordOutput("HopperFloor/SystemState", newState.toString());
+            Logger.recordOutput("Hopper/SystemState", newState.toString());
             systemState = newState;
         }
 
@@ -81,8 +77,8 @@ public class Hopper extends FullSubsystem {
             case IDLE:
                 handleIdle();
                 break;
-            case SPIN:
-                handleKick();
+            case ON:
+                handleOn();
                 break;
             case UNJAM:
                 handleUnjam();
@@ -93,39 +89,39 @@ public class Hopper extends FullSubsystem {
     private SystemState handleStateTransitions() {
         return switch (wantedState) {
             case IDLE -> SystemState.IDLE;
-            case SPIN -> {
+            case ON -> {
                 switch(systemState){
                     case IDLE -> {
-                        yield SystemState.SPIN;
+                        yield SystemState.ON;
                     }
-                    case SPIN -> {
-                        if (Math.abs(inputs.motorCurrent) > 70){
+                    case ON -> {
+                        if (Math.abs(inputs.amps) > 70){
                             unjamStartTime = Timer.getTimestamp();
                             yield SystemState.UNJAM;
                         } else {
-                            yield SystemState.SPIN;
+                            yield SystemState.ON;
                         }
                     }
                     case UNJAM -> {
                         if (Timer.getTimestamp() - unjamStartTime >= unjamTimePeriod){
-                            yield SystemState.SPIN;
+                            yield SystemState.ON;
                         } else {
                             yield SystemState.IDLE;
                         }
                     }
                 }
-                yield SystemState.SPIN;
+                yield SystemState.ON;
 
             }
         };
     }
 
     private void handleIdle() {
-        io.setRotorVelocityRPM(IDLE_RPM);
+        io.setSetpointMechanismRotationsPerSecond(HopperConstants.IDLE_MECHANISM_RPS);
     }
 
-    private void handleKick() {
-        io.setRotorVelocityRPM(KICK_RPM);
+    private void handleOn() {
+        io.setSetpointMechanismRotationsPerSecond(HopperConstants.ON_MECHANISM_RPS);
     }
 
     public void setWantedState(WantedState wantedState) {
@@ -137,6 +133,6 @@ public class Hopper extends FullSubsystem {
     }
 
     private void handleUnjam() {
-        io.setRotorVelocityRPM(-KICK_RPM);
+        io.setSetpointMechanismRotationsPerSecond(-HopperConstants.ON_MECHANISM_RPS);
     }
 }

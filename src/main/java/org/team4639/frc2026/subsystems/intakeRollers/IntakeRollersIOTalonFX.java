@@ -3,87 +3,103 @@
 package org.team4639.frc2026.subsystems.intakeRollers;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.*;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
 public class IntakeRollersIOTalonFX implements IntakeRollersIO {
-  private final TalonFX leftMotor;
-  private final TalonFX rightMotor;
+  private final TalonFX leftLeader;
+  private final TalonFX rightFollower;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityVoltage request = new VelocityVoltage(0);
+  private final VelocityVoltage velocityVoltage;
+  private final VoltageOut voltageOut;
+
+  private final StatusSignal<Angle> leftMechanismRotations;
+  private final StatusSignal<AngularVelocity> leftMechanismRotationsPerSecond;
+  private final StatusSignal<Voltage> leftVolts;
+  private final StatusSignal<Temperature> leftCelsius;
+  private final StatusSignal<Current> leftAmps;
+
+  private final StatusSignal<Angle> rightMechanismRotations;
+  private final StatusSignal<AngularVelocity> rightMechanismRotationsPerSecond;
+  private final StatusSignal<Voltage> rightVolts;
+  private final StatusSignal<Temperature> rightCelsius;
+  private final StatusSignal<Current> rightAmps;
 
   public IntakeRollersIOTalonFX(PortConfiguration portConfiguration) {
-    this.leftMotor = Phoenix6Factory.createDefaultTalon(portConfiguration.leftIntake, false);
-    this.rightMotor = Phoenix6Factory.createDefaultTalon(portConfiguration.rightIntake, false);
+    this.leftLeader = Phoenix6Factory.createDefaultTalon(portConfiguration.leftIntake, false);
+    this.rightFollower = Phoenix6Factory.createDefaultTalon(portConfiguration.rightIntake, false);
 
-    config.CurrentLimits.SupplyCurrentLimit = 40;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.StatorCurrentLimit = 80;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
+    PhoenixUtil.tryUntilOk(5, () -> leftLeader.getConfigurator().apply(IntakeRollersConfigs.leftConfig));
+    PhoenixUtil.tryUntilOk(5, () -> rightFollower.getConfigurator().apply(IntakeRollersConfigs.rightConfig));
 
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    rightFollower.setControl(new Follower(leftLeader.getDeviceID(), MotorAlignmentValue.Opposed));
 
-    config.Slot0.kS = 0;
-    config.Slot0.kV = 0;
-    config.Slot0.kA = 0;
+    velocityVoltage = new VelocityVoltage(0);
+    voltageOut = new VoltageOut(0);
 
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    leftMechanismRotations = leftLeader.getPosition();
+    leftMechanismRotationsPerSecond = leftLeader.getVelocity();
+    leftVolts = leftLeader.getMotorVoltage();
+    leftAmps = leftLeader.getTorqueCurrent();
+    leftCelsius = leftLeader.getDeviceTemp();
 
-    rightMotor.setControl(new Follower(leftMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    rightMechanismRotations = rightFollower.getPosition();
+    rightMechanismRotationsPerSecond = rightFollower.getVelocity();
+    rightVolts = rightFollower.getMotorVoltage();
+    rightAmps = rightFollower.getTorqueCurrent();
+    rightCelsius = rightFollower.getDeviceTemp();
   }
 
   @Override
   public void setVoltage(double volts) {
-    leftMotor.setVoltage(volts);
+    leftLeader.setControl(voltageOut.withOutput(volts));
   }
 
   @Override
-  public void setRotorVelocity(double velocity) {
-    leftMotor.setControl(request.withVelocity(velocity));
-  }
-
-  @Override
-  public void stop() {
-    leftMotor.stopMotor();
+  public void setSetpointMechanismRotationsPerSecond(double mechanismRotationsPerSecond) {
+    leftLeader.setControl(velocityVoltage.withVelocity(mechanismRotationsPerSecond));
   }
 
   @Override
   public void updateInputs(IntakeRollersIOInputs inputs) {
-
-    inputs.connected =
+    inputs.leftConnected =
         BaseStatusSignal.refreshAll(
-                leftMotor.getMotorVoltage(),
-                leftMotor.getStatorCurrent(),
-                leftMotor.getSupplyCurrent(),
-                leftMotor.getDeviceTemp(),
-                leftMotor.getVelocity(),
-                rightMotor.getMotorVoltage(),
-                rightMotor.getStatorCurrent(),
-                rightMotor.getSupplyCurrent(),
-                rightMotor.getDeviceTemp(),
-                rightMotor.getVelocity())
+                leftMechanismRotations,
+            leftMechanismRotationsPerSecond,
+            leftAmps,
+            leftCelsius,
+            leftVolts)
             .isOK();
 
-    inputs.leftVoltage = leftMotor.getMotorVoltage().getValueAsDouble();
-    inputs.leftCurrent = leftMotor.getStatorCurrent().getValueAsDouble();
-    inputs.leftAmps = leftMotor.getSupplyCurrent().getValueAsDouble();
-    inputs.leftTemperature = leftMotor.getDeviceTemp().getValueAsDouble();
-    inputs.leftVelocity = leftMotor.getVelocity().getValueAsDouble();
+    inputs.leftVolts = leftVolts.getValueAsDouble();
+    inputs.leftAmps = leftAmps.getValueAsDouble();
+    inputs.leftCelsius = leftCelsius.getValueAsDouble();
+    inputs.leftMechanismRotationsPerSecond = leftMechanismRotationsPerSecond.getValueAsDouble();
+    inputs.leftMechanismRotations = leftMechanismRotations.getValueAsDouble();
 
-    inputs.rightVoltage = rightMotor.getMotorVoltage().getValueAsDouble();
-    inputs.rightCurrent = rightMotor.getStatorCurrent().getValueAsDouble();
-    inputs.rightAmps = rightMotor.getSupplyCurrent().getValueAsDouble();
-    inputs.rightTemperature = rightMotor.getDeviceTemp().getValueAsDouble();
-    inputs.rightVelocity = rightMotor.getVelocity().getValueAsDouble();
+    inputs.rightConnected = BaseStatusSignal.refreshAll(
+            rightMechanismRotations,
+            rightMechanismRotationsPerSecond,
+            rightAmps,
+            rightCelsius,
+            rightVolts
+    ).isOK();
+
+    inputs.rightVolts = rightVolts.getValueAsDouble();
+    inputs.rightAmps = rightAmps.getValueAsDouble();
+    inputs.rightCelsius = rightCelsius.getValueAsDouble();
+    inputs.rightMechanismRotationsPerSecond = rightMechanismRotationsPerSecond.getValueAsDouble();
+    inputs.rightMechanismRotations = rightMechanismRotations.getValueAsDouble();
   }
 }

@@ -14,15 +14,22 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.*;
+
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Value;
 import lombok.experimental.Accessors;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.Constants.Mode;
+import org.team4639.frc2026.constants.launch.LaunchSetpoint;
+import org.team4639.frc2026.constants.launch.LookupTables;
 import org.team4639.frc2026.subsystems.drive.Drive;
 import org.team4639.frc2026.subsystems.vision.Vision.VisionConsumer;
+import org.team4639.frc2026.util.ValueCacher;
 import org.team4639.lib.led.pattern.LEDPattern;
 import org.team4639.lib.util.PoseEstimator;
 import org.team4639.lib.util.VirtualSubsystem;
@@ -104,6 +111,21 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
   // -------------------------------------------------------------------------
 
   @Getter private double RPMFudge = 1;
+  private final ValueCacher<Object, LaunchSetpoint> currentScoringSetpoint = new ValueCacher<>(() ->
+    LookupTables.getScoringSetpoint(getSecondaryEstimatedPose(), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+  );
+
+  private final ValueCacher<Object, LaunchSetpoint> nextScoringSetpoint = new ValueCacher<>(() ->
+          LookupTables.getScoringSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+  );
+
+  private final ValueCacher<Object, LaunchSetpoint> currentPassingSetpoint = new ValueCacher<>(() ->
+          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+  );
+
+  private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
+          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+  );
 
   // -------------------------------------------------------------------------
   // Miscellaneous Robot State
@@ -124,6 +146,8 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   private final Queue<Boolean> canIsConnected = new LinkedList<>();
   private final Queue<Boolean> temperaturesAreFine = new LinkedList<>();
+
+  public static final Trigger disabled = RobotModeTriggers.disabled();
 
   // -------------------------------------------------------------------------
   // SmartDashboard / Field Display Objects
@@ -250,5 +274,22 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   public LEDPattern getDesiredLEDPattern() {
     return LEDPattern.BLANK;
+  }
+
+  // launch setpoints
+  public LaunchSetpoint getScoringSetpoint(Object caller) {
+    return currentScoringSetpoint.get(caller);
+  }
+
+  public LaunchSetpoint getNextScoringSetpoint(Object caller) {
+    return nextScoringSetpoint.get(caller);
+  }
+
+  public LaunchSetpoint getPassingSetpoint(Object caller) {
+    return currentPassingSetpoint.get(caller);
+  }
+
+  public LaunchSetpoint getNextPassingSetpoint(Object caller) {
+    return nextPassingSetpoint.get(caller);
   }
 }

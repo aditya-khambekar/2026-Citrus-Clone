@@ -44,9 +44,9 @@ public sealed class FeederSysID {
                             feeder::setVoltage,
                             log -> {
                                 log.motor("Feeder")
-                                        .angularPosition(Rotations.of(inputs.motorPosition))
-                                        .angularVelocity(Rotations.of(inputs.motorVelocity).per(Second))
-                                        .voltage(Volts.of(inputs.motorVoltage));
+                                        .angularPosition(Rotations.of(inputs.mechanismRotations))
+                                        .angularVelocity(Rotations.of(inputs.mechanismRotationsPerSecond).per(Second))
+                                        .voltage(Volts.of(inputs.volts));
                             }, // SignalLogger handles logging
                             feeder
                     )

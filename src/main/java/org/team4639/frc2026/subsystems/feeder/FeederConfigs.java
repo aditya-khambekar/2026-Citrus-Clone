@@ -1,0 +1,34 @@
+package org.team4639.frc2026.subsystems.feeder;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
+public class FeederConfigs {
+    public static TalonFXConfiguration feederConfig = createFeederConfig();
+
+    private static TalonFXConfiguration createFeederConfig() {
+        TalonFXConfiguration feederConfig = new TalonFXConfiguration();
+
+        feederConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        feederConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        feederConfig.CurrentLimits.StatorCurrentLimit = 80;
+        feederConfig.CurrentLimits.SupplyCurrentLimit = 40;
+
+        feederConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
+        feederConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // towards drum is positive
+        feederConfig.Feedback.SensorToMechanismRatio = 1.0 / FeederConstants.MOTOR_TO_FEEDER_REDUCTION;
+
+        feederConfig.Audio.BeepOnConfig = false;
+
+        feederConfig.Slot0.kP = 0;
+        feederConfig.Slot0.kI = 0;
+        feederConfig.Slot0.kD = 0;
+        feederConfig.Slot0.kS = 0;
+        feederConfig.Slot0.kV = 0;
+        feederConfig.Slot0.kA = 0;
+
+        return feederConfig;
+    }
+}

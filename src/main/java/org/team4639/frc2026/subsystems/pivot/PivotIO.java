@@ -14,7 +14,9 @@ public interface PivotIO {
         public boolean connected;
     }
 
-    public void setVoltage(double volts);
-    public void setPosition(double mechanismRotations);
-    public void updateInputs(PivotIOInputs inputs);
+    default void setVoltage(double volts) {}
+    default void setSetpointMechanismRotations(double mechanismRotations) {}
+    default void setPositionMechanismRotations(double mechanismRotations) {}
+    default void updateInputs(PivotIOInputs inputs) {}
+    default void setBrakeMode(boolean isBrakeMode) {}
 }

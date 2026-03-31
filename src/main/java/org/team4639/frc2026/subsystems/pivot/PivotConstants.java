@@ -12,4 +12,14 @@ public class PivotConstants {
 
     public static final double IDLE_MECHANISM_ROTATIONS = 0;
     public static final double DOWN_MECHANISM_ROTATIONS = IDLE_MECHANISM_ROTATIONS + MECHANISM_RANGE_ROTATIONS;
+
+    // Volts per MECHANISM rotation
+    public static final double kP = 3;
+    public static final double kI = 0;
+    public static final double kD = 0;
+
+    // Volts per MECHANISM rotation
+    public static final double SIM_kP = 3;
+    public static final double SIM_kI = 0;
+    public static final double SIM_kD = 0;
 }

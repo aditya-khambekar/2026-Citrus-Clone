@@ -25,7 +25,7 @@ public class PivotIOSim implements PivotIO {
                 0.001, 0.0001
         );
 
-        pidController = new PIDController(3, 0, 0);
+        pidController = new PIDController(PivotConstants.SIM_kP, 0, 0);
     }
 
     @Override
@@ -35,9 +35,14 @@ public class PivotIOSim implements PivotIO {
     }
 
     @Override
-    public void setPosition(double mechanismRotations) {
+    public void setSetpointMechanismRotations(double mechanismRotations) {
         this.appliedVolts = pidController.calculate(Units.radiansToRotations(pivotSim.getAngleRads()), mechanismRotations);
         pivotSim.setInputVoltage(appliedVolts);
+    }
+
+    @Override
+    public void setPositionMechanismRotations(double mechanismRotations) {
+        pivotSim.setState(Units.rotationsToRadians(mechanismRotations), 0);
     }
 
     @Override
@@ -50,5 +55,10 @@ public class PivotIOSim implements PivotIO {
         inputs.mechanismRotations = Units.radiansToRotations(pivotSim.getAngleRads());
         inputs.volts = appliedVolts;
         inputs.amps = pivotSim.getCurrentDrawAmps();
+    }
+
+    @Override
+    public void setBrakeMode(boolean isBrakeMode) {
+
     }
 }

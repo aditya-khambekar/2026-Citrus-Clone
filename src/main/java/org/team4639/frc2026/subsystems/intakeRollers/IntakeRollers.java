@@ -4,14 +4,13 @@ package org.team4639.frc2026.subsystems.intakeRollers;
 
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
+import org.team4639.frc2026.RobotState;
 import org.team4639.lib.util.FullSubsystem;
 
 public class IntakeRollers extends FullSubsystem {
   private final IntakeRollersIO rollersIO;
   private final IntakeRollersIOInputsAutoLogged rollerInputs =
       new IntakeRollersIOInputsAutoLogged();
-
-  private final int INTAKE_ROTOR_VELOCITY = 0;
 
   public enum WantedState {
     IDLE,
@@ -25,34 +24,46 @@ public class IntakeRollers extends FullSubsystem {
     OUTTAKE
   }
 
+  private final RobotState state;
+
   @Setter private WantedState wantedState = WantedState.IDLE;
   private SystemState systemState = SystemState.IDLE;
 
-  public IntakeRollers(IntakeRollersIO rollersIO) {
+  public IntakeRollers(IntakeRollersIO rollersIO, RobotState state) {
     this.rollersIO = rollersIO;
+    this.state = state;
     rollersIO.updateInputs(rollerInputs);
     setDefaultCommand(run(this::runStateMachine));
 
-    Logger.recordOutput("Intake/SystemState", systemState.toString());
+    Logger.recordOutput("IntakeRollers/SystemState", systemState.toString());
   }
 
   @Override
   public void periodicBeforeScheduler() {
     rollersIO.updateInputs(rollerInputs);
-    Logger.processInputs("Intake Rollers", rollerInputs);
+    Logger.processInputs("IntakeRollers", rollerInputs);
+  }
+
+  @Override
+  public void periodicAfterScheduler() {
+    state.acceptCANMeasurement(rollerInputs.leftConnected);
+    state.acceptCANMeasurement(rollerInputs.rightConnected);
+
+    state.acceptTemperatureMeasurement(rollerInputs.leftCelsius);
+    state.acceptTemperatureMeasurement(rollerInputs.rightCelsius);
   }
 
   private void runStateMachine() {
     SystemState newState = handleStateTransitions();
     if (newState != systemState) {
-      Logger.recordOutput("Intake/SystemState", newState.toString());
+      Logger.recordOutput("IntakeRollers/SystemState", newState.toString());
       systemState = newState;
     }
 
     switch (systemState) {
       case IDLE -> handleIdle();
-      case INTAKE -> handleIntaking();
-      case OUTTAKE -> handleOuttaking();
+      case INTAKE -> handleIntake();
+      case OUTTAKE -> handleOuttake();
     }
   }
 
@@ -65,14 +76,14 @@ public class IntakeRollers extends FullSubsystem {
   }
 
   public void handleIdle() {
-    rollersIO.stop();
+    rollersIO.setVoltage(0);
   }
 
-  public void handleIntaking() {
-    rollersIO.setRotorVelocity(INTAKE_ROTOR_VELOCITY);
+  public void handleIntake() {
+    rollersIO.setSetpointMechanismRotationsPerSecond(IntakeRollersConstants.INTAKE_MECHANISM_RPS);
   }
 
-  public void handleOuttaking() {
-    rollersIO.setRotorVelocity(-INTAKE_ROTOR_VELOCITY);
+  public void handleOuttake() {
+    rollersIO.setSetpointMechanismRotationsPerSecond(-IntakeRollersConstants.INTAKE_MECHANISM_RPS);
   }
 }

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.*;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.util.Phoenix6Factory;
@@ -41,8 +42,18 @@ public class PivotIOTalonFX implements PivotIO{
     }
 
     @Override
-    public void setPosition(double mechanismRotations) {
+    public void setSetpointMechanismRotations(double mechanismRotations) {
         pivotMotor.setControl(positionVoltage.withPosition(mechanismRotations));
+    }
+
+    @Override
+    public void setPositionMechanismRotations(double mechanismRotations) {
+        pivotMotor.setPosition(mechanismRotations);
+    }
+
+    @Override
+    public void setBrakeMode(boolean isBrakeMode) {
+        pivotMotor.setNeutralMode(isBrakeMode ? NeutralModeValue.Brake : NeutralModeValue.Coast);
     }
 
     @Override
