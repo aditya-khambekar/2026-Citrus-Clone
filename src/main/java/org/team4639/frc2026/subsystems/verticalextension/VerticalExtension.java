@@ -6,14 +6,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
-import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
 import org.team4639.frc2026.util.ValueCacher;
 import org.team4639.lib.util.FullSubsystem;
-
-import java.util.Objects;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -42,7 +39,7 @@ public class VerticalExtension extends FullSubsystem {
     private SystemState systemState = SystemState.HOME_DOWN;
 
     @Setter
-    private double manualRotorRotations = VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS;
+    private double manualRotorRotations = VerticalExtensionConstants.MIN_ROTOR_ROTATIONS;
 
     private boolean beenHomedDown = false;
     private boolean beenHomedUp = false;
@@ -51,8 +48,8 @@ public class VerticalExtension extends FullSubsystem {
 
     private final ValueCacher<Object, Double> setpointCalculator = new ValueCacher<>(() -> {
         return switch (wantedState) {
-            case IDLE -> VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS;
-            case UP -> VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS;
+            case IDLE -> VerticalExtensionConstants.MIN_ROTOR_ROTATIONS;
+            case UP -> VerticalExtensionConstants.MAX_ROTOR_ROTATIONS;
             case MANUAL -> manualRotorRotations;
         };
     });
@@ -90,7 +87,7 @@ public class VerticalExtension extends FullSubsystem {
                     case HOME_DOWN:
                         if (Math.abs(inputs.amps) > VerticalExtensionConstants.ZERO_CURRENT) {
                             this.beenHomedDown = true;
-                            io.setPositionRotorRotations(VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS);
+                            io.setPositionRotorRotations(VerticalExtensionConstants.MIN_ROTOR_ROTATIONS);
                             yield SystemState.IDLE;
                         } else yield SystemState.HOME_DOWN;
                     case IDLE:
@@ -108,7 +105,7 @@ public class VerticalExtension extends FullSubsystem {
                 if (systemState == SystemState.HOME_UP) {
                     if (Math.abs(inputs.amps) > VerticalExtensionConstants.ZERO_CURRENT) {
                         this.beenHomedUp = true;
-                        io.setPositionRotorRotations(VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS);
+                        io.setPositionRotorRotations(VerticalExtensionConstants.MAX_ROTOR_ROTATIONS);
                         yield SystemState.UP;
                     } else yield SystemState.HOME_UP;
                 }
@@ -128,11 +125,11 @@ public class VerticalExtension extends FullSubsystem {
     }
 
     private void handleIdle() {
-        io.setSetpointRotorRotations(VerticalExtensionConstants.DOWN_POSITION_ROTOR_ROTATIONS);
+        io.setSetpointRotorRotations(VerticalExtensionConstants.MIN_ROTOR_ROTATIONS);
     }
 
     private void handleUp() {
-        io.setSetpointRotorRotations(VerticalExtensionConstants.UP_POSITION_ROTOR_ROTATIONS);
+        io.setSetpointRotorRotations(VerticalExtensionConstants.MAX_ROTOR_ROTATIONS);
     }
 
     private void handleHomeUp() {

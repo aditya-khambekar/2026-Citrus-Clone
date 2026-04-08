@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import static edu.wpi.first.units.Units.Volts;
+import static org.team4639.frc2026.subsystems.drum.DrumConstants.SHOOTING_RPM_TOLERANCE;
 
 public class Drum extends FullSubsystem {
     private final RobotState state;
@@ -27,8 +28,6 @@ public class Drum extends FullSubsystem {
 
     @Setter
     private double MANUAL_RPM = 0;
-
-    private final double SHOOTING_RPM_TOLERANCE = 50;
 
     @Getter
     private final DrumSysID sysID = new DrumSysID.DrumSysIDWPI(this, inputs);
