@@ -7,12 +7,12 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import lombok.Getter;
 import lombok.Setter;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.team4639.frc2026.Constants;
 import org.team4639.frc2026.RobotState;
 import org.team4639.lib.util.FullSubsystem;
-import org.team4639.lib.util.LoggedTunableNumber;
+
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -23,7 +23,6 @@ public class Drum extends FullSubsystem {
 
     private double PASSING_RPM = 0;
     private final double IDLE_VOLTAGE = 0;
-    @AutoLogOutput(key = "Shooter Scoring RPM")
     private double SCORING_RPM = 0;
 
     @Setter
@@ -31,10 +30,12 @@ public class Drum extends FullSubsystem {
 
     private final double SHOOTING_RPM_TOLERANCE = 50;
 
-    private final LoggedTunableNumber desiredRPM = new LoggedTunableNumber("Desired RPM").initDefault(0);
-
     @Getter
     private final DrumSysID sysID = new DrumSysID.DrumSysIDWPI(this, inputs);
+
+    private record DrumSetpoint(double mechanismRotationsPerMinute, double mechanismRotationsPerMinutePerSecond){
+        static DrumSetpoint IDLE = new DrumSetpoint(0.0, 0.0);
+    }
 
     public enum WantedState {
         OFF,
@@ -60,39 +61,23 @@ public class Drum extends FullSubsystem {
         this.state = state;
 
         this.setDefaultCommand(this.run(this::runStateMachine));
-        Logger.recordOutput("Shooter/SystemState", systemState.toString());
+        Logger.recordOutput("Drum/SystemState", systemState.toString());
     }
 
     @Override
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
-        Logger.processInputs("Shooter", inputs);
-//        state.updateShooterState(Rotations.per(Minute).of(inputs.leftRPM), null, null); TODO: fix this
+        Logger.processInputs("Drum", inputs);
     }
 
     @Override
     public void periodic() {
-
-        if (Constants.tuningMode) {
-            LoggedTunableNumber.ifChanged(
-                    hashCode(), io::applyNewGains,
-                    PIDs.shooterKp, PIDs.shooterKi, PIDs.shooterKd,
-                    PIDs.shooterKs, PIDs.shooterKv, PIDs.shooterKa,
-                    PIDs.shooterKpSim, PIDs.shooterKiSim, PIDs.shooterKdSim,
-                    PIDs.shooterKsSim, PIDs.shooterKvSim, PIDs.shooterKaSim
-            );
-        }
     }
 
     @Override
     public void periodicAfterScheduler() {
-//        RobotState.getInstance().setShooterStates(new Pair<>(wantedState, systemState));
-//        RobotState.getInstance().accept(inputs);
-//
-//        state.acceptCANMeasurement(inputs.leftConnected);
-//        state.acceptCANMeasurement(inputs.rightConnected);
-//        state.acceptTemperatureMeasurement(inputs.leftTemperature);
-//        state.acceptTemperatureMeasurement(inputs.rightTemperature); TODO: fix this
+        IntStream.range(0, inputs.connected.length).mapToObj(i -> inputs.connected[i]).forEach(state::acceptCANMeasurement);
+        Arrays.stream(inputs.celsius).forEach(state::acceptTemperatureMeasurement);
     }
 
     private SystemState handleStateTransitions() {
@@ -110,34 +95,34 @@ public class Drum extends FullSubsystem {
     }
 
     private void handleScoring() {
-        io.setRPM(this.getSetpointRPM());
+        var setpoint = getSetpoint();
+        io.setSetpointMechanismRPM(setpoint.mechanismRotationsPerMinute, setpoint.mechanismRotationsPerMinutePerSecond);
     }
 
     private void handlePassing() {
-        io.setRPM(this.getSetpointRPM());
+        var setpoint = getSetpoint();
+        io.setSetpointMechanismRPM(setpoint.mechanismRotationsPerMinute, setpoint.mechanismRotationsPerMinutePerSecond);
     }
 
     private void handleIdle() {
         io.setVoltage(IDLE_VOLTAGE);
-        //io.setRPM(400);
     }
 
     private void handleManual() {
-        io.setRPM(MANUAL_RPM);
+        var setpoint = getSetpoint();
+        io.setSetpointMechanismRPM(setpoint.mechanismRotationsPerMinute, setpoint.mechanismRotationsPerMinutePerSecond);
     }
 
     public void setWantedState(WantedState wantedState) {
         this.wantedState = wantedState;
     }
 
-    @Deprecated
-    public void setWantedState(WantedState wantedState, double scoringRPM) {
-        setWantedState(wantedState);
-        if (wantedState == WantedState.PASSING){
-            this.PASSING_RPM = scoringRPM;
-        } else {
-            this.SCORING_RPM = scoringRPM;
-        }
+    public boolean atSetpoint() {
+        return MathUtil.isNear(getSetpoint().mechanismRotationsPerMinute, inputs.mechanismRPM[0], SHOOTING_RPM_TOLERANCE);
+    }
+
+    public boolean aboveSetpoint() {
+        return inputs.mechanismRPM[0] + SHOOTING_RPM_TOLERANCE > getSetpoint().mechanismRotationsPerMinute;
     }
 
     /**
@@ -149,24 +134,34 @@ public class Drum extends FullSubsystem {
         io.setVoltage(volts.in(Volts));
     }
 
-    public double getSetpointRPM() {
-//        return switch (systemState) {
-//            case SCORING -> SCORING_RPM = state.calculateScoringState(this).shooterRPM().in(Rotations.per(Minute));
-//            case PASSING -> PASSING_RPM = state.calculateScoringState(this).shooterRPM().in(Rotations.per(Minute));
-//            case MANUAL -> MANUAL_RPM;
-//            default -> 0;
-//        };TODO: fix this
-        return 0;
+    public DrumSetpoint getSetpoint() {
+        return switch(wantedState){
+            case OFF, IDLE -> DrumSetpoint.IDLE;
+            case SCORING -> {
+                var desiredSetpoint = state.getScoringSetpoint(this);
+                var nextSetpoint = state.getNextScoringSetpoint(this);
+                var rotationsPerMinute = desiredSetpoint.drumRotationsPerMinute();
+                var rotationsPerMinutePerSecond = (nextSetpoint.drumRotationsPerMinute() - rotationsPerMinute) / 0.02;
+
+                yield new DrumSetpoint(rotationsPerMinute, rotationsPerMinutePerSecond);
+            }
+            case PASSING -> {
+                var desiredSetpoint = state.getPassingSetpoint(this);
+                var nextSetpoint = state.getNextPassingSetpoint(this);
+                var rotationsPerMinute = desiredSetpoint.drumRotationsPerMinute();
+                var rotationsPerMinutePerSecond = (nextSetpoint.drumRotationsPerMinute() - rotationsPerMinute) / 0.02;
+
+                yield new DrumSetpoint(rotationsPerMinute, rotationsPerMinutePerSecond);
+            }
+            case MANUAL -> new DrumSetpoint(MANUAL_RPM, 0.0);
+        };
     }
 
-    public boolean atSetpoint() {
-        return MathUtil.isNear(getSetpointRPM(), -inputs.RPM[0], SHOOTING_RPM_TOLERANCE);
-    }
 
     private void runStateMachine() {
         SystemState newState = handleStateTransitions();
         if (newState != systemState) {
-            Logger.recordOutput("Shooter/SystemState", newState.toString());
+            Logger.recordOutput("Drum/SystemState", newState.toString());
             systemState = newState;
         }
 

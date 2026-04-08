@@ -33,9 +33,9 @@ public abstract sealed class DrumSysID {
                             log -> {
                                 // default = REV, left is leader
                                 log.motor("Shooter")
-                                        .angularVelocity(Rotations.per(Minute).of(inputs.RPM[0]))
-                                        .angularPosition(Rotations.of(inputs.rotations[0]))
-                                        .voltage(Volts.of(inputs.voltage[0]));
+                                        .angularVelocity(Rotations.per(Minute).of(inputs.mechanismRPM[0]))
+                                        .angularPosition(Rotations.of(inputs.mechanismRotations[0]))
+                                        .voltage(Volts.of(inputs.volts[0]));
                             }
                             , drum)
             );

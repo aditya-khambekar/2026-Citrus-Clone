@@ -7,8 +7,9 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class DrumConfigs{
+    public static TalonFXConfiguration drumConfig = createDrumConfig();
 
-    private TalonFXConfiguration createDrumConfig(boolean isLeft) {
+    private static TalonFXConfiguration createDrumConfig() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -26,14 +27,15 @@ public class DrumConfigs{
         config.Slot0.kV = 0;
         config.Slot0.kA = 0;
 
-        if (isLeft) config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // positive -> launch balls
-        else config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.Feedback.SensorToMechanismRatio = 1.0 / DrumConstants.MOTOR_TO_DRUM_REDUCTION;
+
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // positive -> launch balls, assume leader is a left motor
 
         return config;
     }
 
-    public void configureStatusSignals(TalonFX talon){
-        BaseStatusSignal.setUpdateFrequencyForAll(200, talon.getPosition(), talon.getVelocity());
-        talon.optimizeBusUtilization(4);
+    public static void configureStatusSignals(TalonFX talon){
+        BaseStatusSignal.setUpdateFrequencyForAll(250, talon.getPosition(), talon.getVelocity(), talon.getAcceleration(), talon.getMotorVoltage(), talon.getTorqueCurrent());
+        talon.optimizeBusUtilization();
     }
 }
