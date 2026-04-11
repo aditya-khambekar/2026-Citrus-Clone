@@ -1,5 +1,7 @@
 package org.team4639.frc2026.subsystems.hopper;
 
+import org.team4639.frc2026.Constants;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 
@@ -22,7 +24,7 @@ public class HopperConfigs {
         config.Feedback.SensorToMechanismRatio = 1.0 / HopperConstants.MOTOR_TO_ROLLER_REDUCTION;
 
         config.Slot0.kS = 0;
-        config.Slot0.kV = 0;
+        config.Slot0.kV = Constants.RobotConstants.THEORETICAL_X60_KV / HopperConstants.MOTOR_TO_ROLLER_REDUCTION;
         config.Slot0.kA = 0;
         config.Slot0.kP = 0;
 

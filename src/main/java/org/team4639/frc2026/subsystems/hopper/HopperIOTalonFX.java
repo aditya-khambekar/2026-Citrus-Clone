@@ -17,7 +17,7 @@ public class HopperIOTalonFX implements HopperIO {
     private final VelocityVoltage velocityVoltage;
 
     public HopperIOTalonFX(PortConfiguration ports) {
-        hopperMotor = Phoenix6Factory.createDefaultTalon(ports.hopperFloor, false);
+        hopperMotor = Phoenix6Factory.createDefaultTalon(ports.hopper, true);
 
         PhoenixUtil.tryUntilOk(5, () -> hopperMotor.getConfigurator().apply(HopperConfigs.hopperConfig));
 
@@ -47,6 +47,7 @@ public class HopperIOTalonFX implements HopperIO {
 
     @Override
     public void setSetpointMechanismRotationsPerSecond(double mechanismRotationsPerSecond) {
+        System.out.println("Hopper Setpoint "+mechanismRotationsPerSecond);
         hopperMotor.setControl(velocityVoltage.withVelocity(mechanismRotationsPerSecond));
     }
 }

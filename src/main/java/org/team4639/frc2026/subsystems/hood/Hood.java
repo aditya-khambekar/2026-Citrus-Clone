@@ -4,6 +4,7 @@ package org.team4639.frc2026.subsystems.hood;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import lombok.Setter;
@@ -34,7 +35,7 @@ public class Hood extends FullSubsystem {
     }
 
     private record HoodSetpoint(double mechanismRotations, double mechanismRotationsPerSecond){
-        static final HoodSetpoint IDLE = new HoodSetpoint(0.0, 0.0);
+        static final HoodSetpoint IDLE = new HoodSetpoint(Units.degreesToRotations(HoodConstants.MIN_LAUNCH_DEGREES), 0.0);
     }
 
     @Setter
@@ -72,7 +73,10 @@ public class Hood extends FullSubsystem {
             case SCORING -> SystemState.SCORING;
             case IDLE -> {
                 if (systemState == SystemState.HOME) {
-                    if (homedDebouncer.calculate(Math.abs(inputs.amps) > HoodConstants.HOME_CURRENT_THRESHOLD)) yield SystemState.IDLE;
+                    if (homedDebouncer.calculate(Math.abs(inputs.amps) > HoodConstants.HOME_CURRENT_THRESHOLD)) {
+                        io.setPositionMechanismRotations(Units.degreesToRotations(HoodConstants.MIN_LAUNCH_DEGREES));
+                        yield SystemState.IDLE;
+                    }
                     else yield SystemState.HOME;
                 } else yield SystemState.IDLE;
             }

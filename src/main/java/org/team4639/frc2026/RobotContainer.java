@@ -10,10 +10,25 @@ import org.team4639.frc2026.commands.DriveCommands;
 import org.team4639.frc2026.constants.ports.WaterBottle;
 import org.team4639.frc2026.subsystems.drive.*;
 import org.team4639.frc2026.subsystems.drive.generated.TunerConstants;
+import org.team4639.frc2026.subsystems.drum.Drum;
+import org.team4639.frc2026.subsystems.drum.DrumIO;
+import org.team4639.frc2026.subsystems.drum.DrumIOTalonFX;
+import org.team4639.frc2026.subsystems.hood.Hood;
+import org.team4639.frc2026.subsystems.hood.HoodIO;
+import org.team4639.frc2026.subsystems.hood.HoodIOTalonFX;
+import org.team4639.frc2026.subsystems.hopper.Hopper;
+import org.team4639.frc2026.subsystems.hopper.HopperIO;
+import org.team4639.frc2026.subsystems.hopper.HopperIOTalonFX;
+import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers;
+import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollersIO;
+import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollersIOTalonFX;
+import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers.WantedState;
 import org.team4639.frc2026.subsystems.vision.*;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.oi.DeadbandXboxController;
 import org.team4639.lib.util.LoggedLazyAutoChooser;
+import org.team4639.lib.util.SysIDUtils;
+import org.team4639.lib.util.SysIDUtils.ButtonConfiguration;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -28,6 +43,11 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
 
+  private final IntakeRollers intakeRollers;
+  private final Drum drum;
+  private final Hopper hopper;
+  private final Hood hood;
+
   // Controller
   private final CommandXboxController driver = new DeadbandXboxController(0);
   private final CommandXboxController operator = new DeadbandXboxController(1);
@@ -39,24 +59,40 @@ public class RobotContainer {
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
+        // drive =
+        //     new Drive(
+        //         new GyroIOPigeon2(),
+        //         new ModuleIOTalonFX(TunerConstants.FrontLeft),
+        //         new ModuleIOTalonFX(TunerConstants.FrontRight),
+        //         new ModuleIOTalonFX(TunerConstants.BackLeft),
+        //         new ModuleIOTalonFX(TunerConstants.BackRight),
+        //         pose -> {});
+
+        // vision =
+        //     new Vision(
+        //         RobotState.getInstance(),
+        //         new VisionIOLimelight(
+        //             "limelight-left",
+        //             () -> RobotState.getInstance().getEstimatedPose().getRotation()),
+        //         new VisionIOLimelight(
+        //             "limelight-right",
+        //             () -> RobotState.getInstance().getEstimatedPose().getRotation()));
+
         drive =
             new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight),
+                new GyroIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
                 pose -> {});
 
-        vision =
-            new Vision(
-                RobotState.getInstance(),
-                new VisionIOLimelight(
-                    "limelight-left",
-                    () -> RobotState.getInstance().getEstimatedPose().getRotation()),
-                new VisionIOLimelight(
-                    "limelight-right",
-                    () -> RobotState.getInstance().getEstimatedPose().getRotation()));
+        vision = new Vision(RobotState.getInstance());
+
+        intakeRollers = new IntakeRollers(new IntakeRollersIOTalonFX(portConfiguration), RobotState.getInstance());
+        drum = new Drum(new DrumIOTalonFX(portConfiguration), RobotState.getInstance());
+        hopper = new Hopper(new HopperIOTalonFX(portConfiguration), RobotState.getInstance());
+        hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
 
         configureButtonBindings();
         break;
@@ -101,6 +137,15 @@ public class RobotContainer {
                             .getSwerveDriveSimulation()
                             .getSimulatedDriveTrainPose()));
 
+                            intakeRollers = new IntakeRollers(new IntakeRollersIO() {}, RobotState.getInstance());
+                            drum = new Drum(new DrumIO() {}, RobotState.getInstance());
+                            hopper = new Hopper(new HopperIO() {
+                                
+                            }, RobotState.getInstance());
+                            hood = new Hood(new HoodIO() {
+                                
+                            }, RobotState.getInstance());
+
         configureSimButtonBindings();
         break;
 
@@ -115,6 +160,16 @@ public class RobotContainer {
                 pose -> {});
 
         vision = new Vision(RobotState.getInstance());
+
+        intakeRollers = new IntakeRollers(new IntakeRollersIO() {}, RobotState.getInstance());
+        drum = new Drum(new DrumIO() {}, RobotState.getInstance());
+
+        hopper = new Hopper(new HopperIO() {
+                                
+                            }, RobotState.getInstance());
+                            hood = new Hood(new HoodIO() {
+                                
+                            }, RobotState.getInstance());
 
         configureButtonBindings();
         break;
@@ -139,6 +194,11 @@ public class RobotContainer {
             () -> -driver.getLeftX(),
             () ->
                 Math.pow(Math.abs(driver.getRightX()), 0.75) * (driver.getRightX() > 0 ? -1 : 1)));
+
+    //driver.a().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.INTAKE))).onFalse(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.IDLE)));
+    //driver.x().onTrue(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.ON))).onFalse(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.IDLE)));
+    //SysIDUtils.bind(driver, ButtonConfiguration.XYAB, drum.getSysID().getRoutine());
+    driver.a().onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING))).onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)));
   }
 
   private void configureSimButtonBindings() {

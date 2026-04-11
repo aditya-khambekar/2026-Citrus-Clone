@@ -37,8 +37,8 @@ public class IntakeRollersIOTalonFX implements IntakeRollersIO {
   private final StatusSignal<Current> rightAmps;
 
   public IntakeRollersIOTalonFX(PortConfiguration portConfiguration) {
-    this.leftLeader = Phoenix6Factory.createDefaultTalon(portConfiguration.leftIntake, false);
-    this.rightFollower = Phoenix6Factory.createDefaultTalon(portConfiguration.rightIntake, false);
+    this.leftLeader = Phoenix6Factory.createDefaultTalon(portConfiguration.leftIntake, true);
+    this.rightFollower = Phoenix6Factory.createDefaultTalon(portConfiguration.rightIntake, true);
 
     PhoenixUtil.tryUntilOk(5, () -> leftLeader.getConfigurator().apply(IntakeRollersConfigs.leftConfig));
     PhoenixUtil.tryUntilOk(5, () -> rightFollower.getConfigurator().apply(IntakeRollersConfigs.rightConfig));
@@ -68,6 +68,7 @@ public class IntakeRollersIOTalonFX implements IntakeRollersIO {
 
   @Override
   public void setSetpointMechanismRotationsPerSecond(double mechanismRotationsPerSecond) {
+    System.out.println("Set Setpoint "+mechanismRotationsPerSecond);
     leftLeader.setControl(velocityVoltage.withVelocity(mechanismRotationsPerSecond));
   }
 

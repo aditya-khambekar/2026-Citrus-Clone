@@ -95,7 +95,7 @@ public class Hopper extends FullSubsystem {
                         yield SystemState.ON;
                     }
                     case ON -> {
-                        if (Math.abs(inputs.amps) > 70){
+                        if (false){
                             unjamStartTime = Timer.getTimestamp();
                             yield SystemState.UNJAM;
                         } else {
