@@ -81,10 +81,10 @@ public class IntakeRollers extends FullSubsystem {
 
   public void handleIntake() {
     System.out.println("handnle intake");
-    rollersIO.setSetpointMechanismRotationsPerSecond(IntakeRollersConstants.INTAKE_MECHANISM_RPS);
+    rollersIO.setSetpointMechanismRotationsPerSecond(IntakeRollersConstants.INTAKE_MECHANISM_RPS.get());
   }
 
   public void handleOuttake() {
-    rollersIO.setSetpointMechanismRotationsPerSecond(-IntakeRollersConstants.INTAKE_MECHANISM_RPS);
+    rollersIO.setSetpointMechanismRotationsPerSecond(-IntakeRollersConstants.INTAKE_MECHANISM_RPS.get());
   }
 }

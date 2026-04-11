@@ -5,6 +5,8 @@ import edu.wpi.first.math.util.Units;
 
 public class PivotConstants {
     public static final double MOTOR_TO_PIVOT_REDUCTION = 1.0 / 3.0 * 18.0 / 56.0 * 12.0 / 24.0;
+    public static final double MOTOR_TO_ENCODER_REDUCTION = 1.0 / 3.0 * 18.0 / 56.0;
+    public static final double ENCODER_TO_PIVOT_REDUCTION = 12.0 / 24.0;
     // figure out what this empirically
     public static final double MECHANISM_RANGE_ROTATIONS = Units.degreesToRotations(135);
     public static final double ZERO_AMPS = 12;

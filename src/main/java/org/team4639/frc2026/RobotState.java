@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -30,6 +31,7 @@ import org.team4639.frc2026.subsystems.drive.Drive;
 import org.team4639.frc2026.subsystems.vision.Vision.VisionConsumer;
 import org.team4639.frc2026.util.ValueCacher;
 import org.team4639.lib.led.pattern.LEDPattern;
+import org.team4639.lib.util.LoggedTunableNumber;
 import org.team4639.lib.util.PoseEstimator;
 import org.team4639.lib.util.VirtualSubsystem;
 import org.team4639.lib.util.geometry.AllianceFlipUtil;
@@ -125,6 +127,9 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
   private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
           LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
   );
+
+  private final LoggedTunableNumber desiredHoodDegrees = new LoggedTunableNumber("Desired Hood Degrees", 10);
+  private final LoggedTunableNumber desiredShooterRPM = new LoggedTunableNumber("Desired Shooter RPM", 0);
 
   // -------------------------------------------------------------------------
   // Miscellaneous Robot State
@@ -283,11 +288,13 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   // launch setpoints
   public LaunchSetpoint getScoringSetpoint(Object caller) {
-    return currentScoringSetpoint.get(caller);
+    var setpoint = currentScoringSetpoint.get(caller);
+    return new LaunchSetpoint(setpoint.drivetrainRotations(), Units.degreesToRotations(desiredHoodDegrees.get()), desiredShooterRPM.get());
   }
 
   public LaunchSetpoint getNextScoringSetpoint(Object caller) {
-    return nextScoringSetpoint.get(caller);
+      var setpoint = nextScoringSetpoint.get(caller);
+      return new LaunchSetpoint(setpoint.drivetrainRotations(), Units.degreesToRotations(desiredHoodDegrees.get()), desiredShooterRPM.get());
   }
 
   public LaunchSetpoint getPassingSetpoint(Object caller) {

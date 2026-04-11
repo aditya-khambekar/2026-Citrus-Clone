@@ -37,9 +37,9 @@ public class DrumIOTalonFX implements DrumIO {
 
         leader = motors[0]; // left top
 
-        motors[1].setControl(new Follower(motors[2].getDeviceID(), MotorAlignmentValue.Aligned));
-        motors[2].setControl(new Follower(motors[2].getDeviceID(), MotorAlignmentValue.Opposed));
-        motors[3].setControl(new Follower(motors[2].getDeviceID(), MotorAlignmentValue.Opposed));
+        motors[1].setControl(new Follower(motors[0].getDeviceID(), MotorAlignmentValue.Aligned));
+        motors[2].setControl(new Follower(motors[0].getDeviceID(), MotorAlignmentValue.Opposed));
+        motors[3].setControl(new Follower(motors[0].getDeviceID(), MotorAlignmentValue.Opposed));
 
         voltageOut = new VoltageOut(0);
         velocityVoltage = new VelocityVoltage(0);

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import org.team4639.frc2026.Constants;
 
 public class DrumConfigs{
     public static TalonFXConfiguration drumConfig = createDrumConfig();
@@ -20,12 +21,12 @@ public class DrumConfigs{
 
         config.Audio.BeepOnConfig = false;
 
-        config.Slot0.kP = 0;
+        config.Slot0.kP = 0.2;
         config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
-        config.Slot0.kS = 0;
-        config.Slot0.kV = 0;
-        config.Slot0.kA = 0;
+        config.Slot0.kD = 0.01;
+        config.Slot0.kS = 0.30292;
+        config.Slot0.kV = 0.14000;
+        config.Slot0.kA = 0.010403;
 
         config.Feedback.SensorToMechanismRatio = 1.0 / DrumConstants.MOTOR_TO_DRUM_REDUCTION;
 

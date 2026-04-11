@@ -24,5 +24,6 @@ public class WaterBottle {
     portConfiguration.rightTopDrum = new CanDeviceId(28, maincanivore);
     portConfiguration.leftBottomDrum = new CanDeviceId(29, maincanivore);
     portConfiguration.rightBottomDrum = new CanDeviceId(30, maincanivore);
+    portConfiguration.intakePivotEncoder = new CanDeviceId(50, maincanivore);
   }
 }

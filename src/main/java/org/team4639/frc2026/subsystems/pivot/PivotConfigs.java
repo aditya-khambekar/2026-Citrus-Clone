@@ -1,5 +1,6 @@
 package org.team4639.frc2026.subsystems.pivot;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -27,6 +28,11 @@ public class PivotConfigs {
 
         config.Slot0.kP = PivotConstants.kP;
 
+        return config;
+    }
+
+    private static CANcoderConfiguration createEncoderConfig() {
+        CANcoderConfiguration config = new CANcoderConfiguration();
         return config;
     }
 }

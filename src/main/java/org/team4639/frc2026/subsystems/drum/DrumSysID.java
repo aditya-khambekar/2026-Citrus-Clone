@@ -23,9 +23,9 @@ public abstract sealed class DrumSysID {
             super(drum, inputs);
             super.routine = new SysIdRoutine(
                     new SysIdRoutine.Config(
-                            Volts.per(Second).of(0.25),
-                            Volts.of(3),
-                            null,
+                            Volts.per(Second).of(0.5),
+                            Volts.of(6),
+                            Seconds.of(16),
                             (state) -> Logger.recordOutput("SysIdTestState", state.toString())
                     ),
                     new SysIdRoutine.Mechanism(

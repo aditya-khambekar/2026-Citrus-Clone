@@ -87,14 +87,13 @@ public class Hood extends FullSubsystem {
         return switch (wantedState) {
             case IDLE -> HoodSetpoint.IDLE;
             case SCORING -> {
-                // double setpointRotations = state.getScoringSetpoint(this).hoodRotations();
-                // double nextSetpointRotations = state.getNextScoringSetpoint(this).hoodRotations();
+                 double setpointRotations = state.getScoringSetpoint(this).hoodRotations();
+                 double nextSetpointRotations = state.getNextScoringSetpoint(this).hoodRotations();
 
-                // double rotationsPerSecond = nextSetpointRotations - setpointRotations;
-                // rotationsPerSecond /= 0.02;
+                 double rotationsPerSecond = nextSetpointRotations - setpointRotations;
+                 rotationsPerSecond /= 0.02;
 
-                // yield new HoodSetpoint(setpointRotations, rotationsPerSecond);
-                yield new HoodSetpoint(Units.degreesToRotations(35), 0);
+                 yield new HoodSetpoint(setpointRotations, rotationsPerSecond);
             }
             case PASSING -> {
                 double setpointRotations = state.getPassingSetpoint(this).hoodRotations();

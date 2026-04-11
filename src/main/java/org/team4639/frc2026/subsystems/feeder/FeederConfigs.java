@@ -3,6 +3,7 @@ package org.team4639.frc2026.subsystems.feeder;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import org.team4639.frc2026.Constants;
 
 public class FeederConfigs {
     public static TalonFXConfiguration feederConfig = createFeederConfig();
@@ -26,7 +27,7 @@ public class FeederConfigs {
         feederConfig.Slot0.kI = 0;
         feederConfig.Slot0.kD = 0;
         feederConfig.Slot0.kS = 0;
-        feederConfig.Slot0.kV = 0;
+        feederConfig.Slot0.kV = Constants.RobotConstants.THEORETICAL_X60_KV / FeederConstants.MOTOR_TO_FEEDER_REDUCTION;
         feederConfig.Slot0.kA = 0;
 
         return feederConfig;

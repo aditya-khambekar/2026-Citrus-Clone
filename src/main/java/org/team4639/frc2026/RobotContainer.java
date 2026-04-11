@@ -14,6 +14,9 @@ import org.team4639.frc2026.subsystems.drive.generated.TunerConstantsOverrides;
 import org.team4639.frc2026.subsystems.drum.Drum;
 import org.team4639.frc2026.subsystems.drum.DrumIO;
 import org.team4639.frc2026.subsystems.drum.DrumIOTalonFX;
+import org.team4639.frc2026.subsystems.feeder.Feeder;
+import org.team4639.frc2026.subsystems.feeder.FeederIO;
+import org.team4639.frc2026.subsystems.feeder.FeederIOTalonFX;
 import org.team4639.frc2026.subsystems.hood.Hood;
 import org.team4639.frc2026.subsystems.hood.HoodIO;
 import org.team4639.frc2026.subsystems.hood.HoodIOTalonFX;
@@ -48,6 +51,7 @@ public class RobotContainer {
   private final Drum drum;
   private final Hopper hopper;
   private final Hood hood;
+  private final Feeder feeder;
 
   // Controller
   private final CommandXboxController driver = new DeadbandXboxController(0);
@@ -94,6 +98,7 @@ public class RobotContainer {
         drum = new Drum(new DrumIOTalonFX(portConfiguration), RobotState.getInstance());
         hopper = new Hopper(new HopperIOTalonFX(portConfiguration), RobotState.getInstance());
         hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
+        feeder = new Feeder(new FeederIOTalonFX(portConfiguration), RobotState.getInstance());
 
         configureButtonBindings();
         break;
@@ -146,6 +151,8 @@ public class RobotContainer {
                             hood = new Hood(new HoodIO() {
                                 
                             }, RobotState.getInstance());
+          feeder = new Feeder(new FeederIO() {
+          }, RobotState.getInstance());
 
         configureSimButtonBindings();
         break;
@@ -172,6 +179,9 @@ public class RobotContainer {
                                 
                             }, RobotState.getInstance());
 
+                            feeder = new Feeder(new FeederIO() {
+                            }, RobotState.getInstance());
+
         configureButtonBindings();
         break;
     }
@@ -196,9 +206,19 @@ public class RobotContainer {
             () ->
                 Math.pow(Math.abs(driver.getRightX()), 0.75) * (driver.getRightX() > 0 ? -1 : 1)));
 
-    driver.povUp().onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING)))
-        .onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)));
-        SysIDUtils.bind(driver, ButtonConfiguration.XYAB, drum.getSysID().getRoutine());
+    driver.rightTrigger()
+            .onFalse(Commands.runOnce(() -> drum.setWantedState(Drum.WantedState.IDLE)))
+            .onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)))
+            .onFalse(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.IDLE)))
+            .onFalse(Commands.runOnce(() -> feeder.setWantedState(Feeder.WantedState.IDLE)))
+            .onTrue(Commands.runOnce(() -> drum.setWantedState(Drum.WantedState.SCORING)))
+            .onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING)))
+            .and(drum::aboveSetpoint)
+            .onTrue(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.ON)))
+            .onTrue(Commands.runOnce(() -> feeder.setWantedState(Feeder.WantedState.FEED_SCORING)));
+
+    driver.a().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.INTAKE)));
+    driver.b().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.IDLE)));
   }
 
   private void configureSimButtonBindings() {

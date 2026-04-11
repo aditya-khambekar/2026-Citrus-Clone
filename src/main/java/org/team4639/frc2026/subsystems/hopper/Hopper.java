@@ -121,7 +121,7 @@ public class Hopper extends FullSubsystem {
     }
 
     private void handleOn() {
-        io.setSetpointMechanismRotationsPerSecond(HopperConstants.ON_MECHANISM_RPS);
+        io.setSetpointMechanismRotationsPerSecond(HopperConstants.ON_MECHANISM_RPS.get());
     }
 
     public void setWantedState(WantedState wantedState) {
@@ -133,6 +133,6 @@ public class Hopper extends FullSubsystem {
     }
 
     private void handleUnjam() {
-        io.setSetpointMechanismRotationsPerSecond(-HopperConstants.ON_MECHANISM_RPS);
+        io.setSetpointMechanismRotationsPerSecond(-HopperConstants.ON_MECHANISM_RPS.get());
     }
 }

@@ -71,7 +71,7 @@ public class Feeder extends FullSubsystem {
 
                 double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
 
-                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM, drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM);
+                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM.get(), drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM.get());
             }
             case FEED_SCORING -> {
                 double currentDrumRPS = state.getScoringSetpoint(this).drumRotationsPerMinute() / 60.0;
@@ -79,7 +79,7 @@ public class Feeder extends FullSubsystem {
 
                 double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
 
-                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM, drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM);
+                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM.get(), drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM.get());
             }
         };
     }

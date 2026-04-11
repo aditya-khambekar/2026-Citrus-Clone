@@ -14,5 +14,5 @@ public class PortConfiguration {
   public CanDeviceId leftBottomDrum;
   public CanDeviceId rightBottomDrum;
   public CanDeviceId hood;
-  public CanDeviceId hopperFloor;
+  public CanDeviceId intakePivotEncoder;
 }
