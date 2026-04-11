@@ -10,6 +10,7 @@ import org.team4639.frc2026.commands.DriveCommands;
 import org.team4639.frc2026.constants.ports.WaterBottle;
 import org.team4639.frc2026.subsystems.drive.*;
 import org.team4639.frc2026.subsystems.drive.generated.TunerConstants;
+import org.team4639.frc2026.subsystems.drive.generated.TunerConstantsOverrides;
 import org.team4639.frc2026.subsystems.drum.Drum;
 import org.team4639.frc2026.subsystems.drum.DrumIO;
 import org.team4639.frc2026.subsystems.drum.DrumIOTalonFX;
@@ -62,10 +63,10 @@ public class RobotContainer {
         // drive =
         //     new Drive(
         //         new GyroIOPigeon2(),
-        //         new ModuleIOTalonFX(TunerConstants.FrontLeft),
-        //         new ModuleIOTalonFX(TunerConstants.FrontRight),
-        //         new ModuleIOTalonFX(TunerConstants.BackLeft),
-        //         new ModuleIOTalonFX(TunerConstants.BackRight),
+        //         new ModuleIOTalonFX(TunerConstants.FrontLeft, TunerConstantsOverrides.overrides[0]),
+        //         new ModuleIOTalonFX(TunerConstants.FrontRight, TunerConstantsOverrides.overrides[1]),
+        //         new ModuleIOTalonFX(TunerConstants.BackLeft, TunerConstantsOverrides.overrides[2]),
+        //         new ModuleIOTalonFX(TunerConstants.BackRight, TunerConstantsOverrides.overrides[3]),
         //         pose -> {});
 
         // vision =
@@ -195,10 +196,9 @@ public class RobotContainer {
             () ->
                 Math.pow(Math.abs(driver.getRightX()), 0.75) * (driver.getRightX() > 0 ? -1 : 1)));
 
-    //driver.a().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.INTAKE))).onFalse(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.IDLE)));
-    //driver.x().onTrue(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.ON))).onFalse(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.IDLE)));
-    //SysIDUtils.bind(driver, ButtonConfiguration.XYAB, drum.getSysID().getRoutine());
-    driver.a().onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING))).onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)));
+    driver.povUp().onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING)))
+        .onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)));
+        SysIDUtils.bind(driver, ButtonConfiguration.XYAB, drum.getSysID().getRoutine());
   }
 
   private void configureSimButtonBindings() {

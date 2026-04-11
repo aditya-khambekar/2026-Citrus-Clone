@@ -1,14 +1,25 @@
 package org.team4639.frc2026.subsystems.pivot;
 
+import lombok.Getter;
 import lombok.Setter;
+
+import static edu.wpi.first.units.Units.Volts;
+
+import javax.annotation.processing.Generated;
+
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
 import org.team4639.lib.util.FullSubsystem;
+
+import edu.wpi.first.units.measure.Voltage;
 
 public class Pivot extends FullSubsystem {
     private final PivotIO io;
     private final PivotIOInputsAutoLogged inputs;
     private final RobotState state;
+
+    @Getter
+    private final PivotSysID sysID;
 
     @Setter
     private double manualMechanismRotations = PivotConstants.IDLE_MECHANISM_ROTATIONS;
@@ -20,6 +31,7 @@ public class Pivot extends FullSubsystem {
 
         Logger.recordOutput("Pivot/SystemState", systemState);
         setDefaultCommand(this.run(this::runStateMachine));
+        sysID = new PivotSysID.PivotSysIDWPI(this, inputs);
     }
 
     public enum WantedState {
@@ -42,6 +54,7 @@ public class Pivot extends FullSubsystem {
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
         Logger.processInputs("Pivot", inputs);
+        state.setPivotMechanismRotations(inputs.mechanismRotations);
     }
 
     @Override
@@ -108,5 +121,9 @@ public class Pivot extends FullSubsystem {
 
     private void handleManual() {
         io.setSetpointMechanismRotations(manualMechanismRotations);
+    }
+
+    protected void setVoltage(Voltage volts){
+        io.setVoltage(volts.in(Volts));
     }
 }

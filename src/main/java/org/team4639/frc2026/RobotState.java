@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 import lombok.experimental.Accessors;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -148,6 +147,12 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
   private final Queue<Boolean> temperaturesAreFine = new LinkedList<>();
 
   public static final Trigger disabled = RobotModeTriggers.disabled();
+
+  @Setter @Getter
+  private double pivotMechanismRotations = 0;
+
+  @Setter @Getter
+  private double verticalExtensionProportion = 0;
 
   // -------------------------------------------------------------------------
   // SmartDashboard / Field Display Objects

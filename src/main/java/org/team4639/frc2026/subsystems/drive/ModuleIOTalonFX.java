@@ -20,7 +20,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import java.util.Queue;
+
+import org.jetbrains.annotations.Nullable;
 import org.team4639.frc2026.subsystems.drive.generated.TunerConstants;
+import org.team4639.frc2026.subsystems.drive.generated.TunerConstantsOverrides;
 import org.team4639.lib.util.PhoenixUtil;
 
 /**
@@ -81,14 +84,15 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   public ModuleIOTalonFX(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          constants) {
+          constants, @Nullable TunerConstantsOverrides overrides) {
     this.constants = constants;
     driveTalon = new TalonFX(constants.DriveMotorId, TunerConstants.kCANBus);
     turnTalon = new TalonFX(constants.SteerMotorId, TunerConstants.kCANBus);
     cancoder = new CANcoder(constants.EncoderId, TunerConstants.kCANBus);
 
     // Configure drive motor
-    var driveConfig = constants.DriveMotorInitialConfigs;
+    var driveConfig = constants.DriveMotorInitialConfigs.clone();
+    if (overrides != null && overrides.driveSlot0Configs != null) driveConfig.Slot0 = overrides.driveSlot0Configs;
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.Slot0 = constants.DriveMotorGains;
     driveConfig.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
@@ -106,7 +110,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     // Configure turn motor
     var turnConfig = new TalonFXConfiguration();
     turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    turnConfig.Slot0 = constants.SteerMotorGains;
+    turnConfig.Slot0 = (overrides != null && overrides.steerSlot0Configs != null) ? overrides.steerSlot0Configs : constants.SteerMotorGains;
     turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
     turnConfig.Feedback.FeedbackSensorSource =
         switch (constants.FeedbackSource) {
@@ -175,6 +179,12 @@ public class ModuleIOTalonFX implements ModuleIO {
         turnAppliedVolts,
         turnCurrent);
     ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+  }
+
+  public ModuleIOTalonFX(
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
+    this(constants, null);
   }
 
   @Override

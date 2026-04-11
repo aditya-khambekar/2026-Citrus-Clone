@@ -10,7 +10,7 @@ public class PivotConstants {
     public static final double ZERO_AMPS = 12;
     public static final double ZERO_VOLTAGE = -1;
 
-    public static final double IDLE_MECHANISM_ROTATIONS = 0;
+    public static final double IDLE_MECHANISM_ROTATIONS = Units.degreesToRotations(45);
     public static final double DOWN_MECHANISM_ROTATIONS = IDLE_MECHANISM_ROTATIONS + MECHANISM_RANGE_ROTATIONS;
 
     // Volts per MECHANISM rotation

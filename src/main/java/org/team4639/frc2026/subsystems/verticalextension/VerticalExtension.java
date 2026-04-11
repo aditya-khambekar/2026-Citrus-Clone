@@ -4,8 +4,10 @@ package org.team4639.frc2026.subsystems.verticalextension;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
@@ -13,6 +15,8 @@ import org.team4639.frc2026.util.ValueCacher;
 import org.team4639.lib.util.FullSubsystem;
 
 import static edu.wpi.first.units.Units.Volts;
+
+import javax.annotation.processing.Generated;
 
 public class VerticalExtension extends FullSubsystem {
     private final RobotState state;
@@ -34,7 +38,7 @@ public class VerticalExtension extends FullSubsystem {
         MANUAL
     }
 
-    @Setter
+    @Setter @Getter
     private WantedState wantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.HOME_DOWN;
 
@@ -42,9 +46,10 @@ public class VerticalExtension extends FullSubsystem {
     private double manualRotorRotations = VerticalExtensionConstants.MIN_ROTOR_ROTATIONS;
 
     private boolean beenHomedDown = false;
-    private boolean beenHomedUp = false;
+    private boolean beenHomedUp = true; // no homing up
 
     private final Debouncer isStuckDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+    private final Debouncer inStuckStateDebouncer = new Debouncer(2.0, DebounceType.kRising);
 
     private final ValueCacher<Object, Double> setpointCalculator = new ValueCacher<>(() -> {
         return switch (wantedState) {
@@ -67,6 +72,7 @@ public class VerticalExtension extends FullSubsystem {
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
         Logger.processInputs("VerticalExtension", inputs);
+        state.setVerticalExtensionProportion(VerticalExtensionConstants.rotorRotationsToProportion(inputs.rotorRotations));
     }
 
     @Override
@@ -95,10 +101,15 @@ public class VerticalExtension extends FullSubsystem {
                             yield SystemState.STUCK;
                         } else yield SystemState.IDLE;
                     case STUCK:
-                        yield SystemState.STUCK; // only way to get unstuck is to change the wanted state, handled by code
-                        default:
-                            if (!beenHomedDown) yield SystemState.HOME_DOWN;
-                            else yield SystemState.IDLE;
+                        // if we have been stuck for long enough, goes back to IDLE state
+                        // to check if we are still stuck
+                        if (inStuckStateDebouncer.calculate(true)){
+                            inStuckStateDebouncer.calculate(false);
+                            yield SystemState.IDLE;
+                        } else yield SystemState.STUCK;
+                    default:
+                        if (!beenHomedDown) yield SystemState.HOME_DOWN;
+                        else yield SystemState.IDLE;
                 }
             }
             case UP -> {
