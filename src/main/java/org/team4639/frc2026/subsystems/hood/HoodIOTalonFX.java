@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import org.team4639.frc2026.RobotState;
 import org.team4639.frc2026.util.PortConfiguration;
+import org.team4639.lib.util.Commands2;
 import org.team4639.lib.util.Phoenix6Factory;
 import org.team4639.lib.util.PhoenixUtil;
 
@@ -47,13 +48,13 @@ public class HoodIOTalonFX implements HoodIO {
         motorVoltage = hoodMotor.getMotorVoltage();
         motorCurrent = hoodMotor.getStatorCurrent();
 
-        //RobotState.disabled.onTrue(Commands.runOnce(() -> PhoenixUtil.tryUntilOk(5, () -> hoodMotor.setNeutralMode(NeutralModeValue.Coast))));
-        //RobotState.disabled.onFalse(Commands.runOnce(() -> PhoenixUtil.tryUntilOk(5, () -> hoodMotor.setNeutralMode(NeutralModeValue.Brake))));
+        RobotState.disabled.onTrue(Commands2.action(() -> PhoenixUtil.tryUntilOk(5, () -> hoodMotor.setNeutralMode(NeutralModeValue.Coast))));
+        RobotState.disabled.onFalse(Commands2.action(() -> PhoenixUtil.tryUntilOk(5, () -> hoodMotor.setNeutralMode(NeutralModeValue.Brake))));
 
         voltageOut.IgnoreSoftwareLimits = true;
         positionVoltage.IgnoreSoftwareLimits = false;
 
-        SmartDashboard.putData("Hood PID", hoodController);
+        if (usingWPILibPID) SmartDashboard.putData("Hood PID", hoodController);
     }
 
     @Override
