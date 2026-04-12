@@ -182,7 +182,7 @@ public class VerticalExtension extends FullSubsystem {
         }
 
         switch (systemState) {
-            case HOME_DOWN: 
+            case HOME_DOWN:
                 handleHomeDown();
                 break;
             case HOME_UP:

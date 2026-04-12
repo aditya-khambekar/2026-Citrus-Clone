@@ -145,7 +145,7 @@ public class LookupTables {
                 nextEstimatedPose.transformBy(
                         new Transform2d(
                                 Constants.RobotConstants.ORIGIN_TO_DRUM.getTranslation(),
-                                Rotation2d.k180deg));
+                                Rotation2d.kZero));
 
         double distanceMeters = nextEstimatedPose.getTranslation().getDistance(targetPose);
         double TOF = scoringDistanceToTOF.get(distanceMeters);

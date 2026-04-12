@@ -1,3 +1,5 @@
+/* Copyright (c) 2025-2026 FRC 4639. */
+
 package org.team4639.frc2026.subsystems.drive.generated;
 
 import com.ctre.phoenix6.configs.Slot0Configs;

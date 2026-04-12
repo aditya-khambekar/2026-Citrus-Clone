@@ -113,19 +113,19 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   @Getter private double RPMFudge = 1;
   private final ValueCacher<Object, LaunchSetpoint> currentScoringSetpoint = new ValueCacher<>(() ->
-    LookupTables.getScoringSetpoint(getSecondaryEstimatedPose(), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+    LookupTables.getScoringSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
   );
 
   private final ValueCacher<Object, LaunchSetpoint> nextScoringSetpoint = new ValueCacher<>(() ->
-          LookupTables.getScoringSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+          LookupTables.getScoringSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
   );
 
   private final ValueCacher<Object, LaunchSetpoint> currentPassingSetpoint = new ValueCacher<>(() ->
-          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
   );
 
   private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
-          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getChassisSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
   );
 
   private final LoggedTunableNumber desiredHoodDegrees = new LoggedTunableNumber("Desired Hood Degrees", 10);
@@ -137,6 +137,9 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   private final PoseEstimator primaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
   private final PoseEstimator secondaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
+
+  @Setter @Getter
+  private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
 
   @Setter private boolean sendVisionToPrimaryPoseEstimator = true;
 
@@ -181,6 +184,7 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
         "CAN Measurements", canIsConnected.stream().allMatch(measurement -> measurement));
     SmartDashboard.putBoolean(
         "Motor Temperatures", temperaturesAreFine.stream().allMatch(measurement -> measurement));
+    SmartDashboard.putNumber("Distance To Goal", getDistanceToGoal());
 
     canIsConnected.clear();
     temperaturesAreFine.clear();
@@ -252,10 +256,10 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
     secondaryPoseEstimator.addVisionObservation(
-        cameraIndex, visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters) , timestampSeconds, visionMeasurementStdDevs);
     if (sendVisionToPrimaryPoseEstimator)
       primaryPoseEstimator.addVisionObservation(
-          cameraIndex, visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+          cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters), timestampSeconds, visionMeasurementStdDevs);
   }
 
   // =========================================================================
@@ -303,5 +307,9 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
   public LaunchSetpoint getNextPassingSetpoint(Object caller) {
     return nextPassingSetpoint.get(caller);
+  }
+
+  public double getDistanceToGoal() {
+      return getEstimatedPose().transformBy(Constants.RobotConstants.ORIGIN_TO_DRUM).getTranslation().getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
   }
 }

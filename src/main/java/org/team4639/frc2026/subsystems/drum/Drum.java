@@ -121,6 +121,7 @@ public class Drum extends FullSubsystem {
     }
 
     public boolean aboveSetpoint() {
+
         return inputs.mechanismRPM[0] + SHOOTING_RPM_TOLERANCE > getSetpoint().mechanismRotationsPerMinute;
     }
 

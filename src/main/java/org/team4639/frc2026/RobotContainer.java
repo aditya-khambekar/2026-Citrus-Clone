@@ -6,7 +6,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import org.team4639.frc2026.commands.DriveCommands;
+import org.team4639.frc2026.commands.Actions;
+import org.team4639.frc2026.commands.factory.DriveCommands;
+import org.team4639.frc2026.commands.factory.SuperstructureCommands;
 import org.team4639.frc2026.constants.ports.WaterBottle;
 import org.team4639.frc2026.subsystems.drive.*;
 import org.team4639.frc2026.subsystems.drive.generated.TunerConstants;
@@ -30,9 +32,9 @@ import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers.WantedState;
 import org.team4639.frc2026.subsystems.vision.*;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.oi.DeadbandXboxController;
+import org.team4639.lib.oi.OI;
 import org.team4639.lib.util.LoggedLazyAutoChooser;
 import org.team4639.lib.util.SysIDUtils;
-import org.team4639.lib.util.SysIDUtils.ButtonConfiguration;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -54,45 +56,34 @@ public class RobotContainer {
   private final Feeder feeder;
 
   // Controller
-  private final CommandXboxController driver = new DeadbandXboxController(0);
-  private final CommandXboxController operator = new DeadbandXboxController(1);
+  private final CommandXboxController driver = OI.driver;
+  private final CommandXboxController operator = OI.operator;
 
   // Dashboard inputs
   private final LoggedLazyAutoChooser autoChooser;
+
+  // actions
+    private final Actions actions;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
-        // drive =
-        //     new Drive(
-        //         new GyroIOPigeon2(),
-        //         new ModuleIOTalonFX(TunerConstants.FrontLeft, TunerConstantsOverrides.overrides[0]),
-        //         new ModuleIOTalonFX(TunerConstants.FrontRight, TunerConstantsOverrides.overrides[1]),
-        //         new ModuleIOTalonFX(TunerConstants.BackLeft, TunerConstantsOverrides.overrides[2]),
-        //         new ModuleIOTalonFX(TunerConstants.BackRight, TunerConstantsOverrides.overrides[3]),
-        //         pose -> {});
+         drive =
+             new Drive(
+                 new GyroIOPigeon2(),
+                 new ModuleIOTalonFX(TunerConstants.FrontLeft, TunerConstantsOverrides.overrides[0]),
+                 new ModuleIOTalonFX(TunerConstants.FrontRight, TunerConstantsOverrides.overrides[1]),
+                 new ModuleIOTalonFX(TunerConstants.BackLeft, TunerConstantsOverrides.overrides[2]),
+                 new ModuleIOTalonFX(TunerConstants.BackRight, TunerConstantsOverrides.overrides[3]),
+                 pose -> {});
 
-        // vision =
-        //     new Vision(
-        //         RobotState.getInstance(),
-        //         new VisionIOLimelight(
-        //             "limelight-left",
-        //             () -> RobotState.getInstance().getEstimatedPose().getRotation()),
-        //         new VisionIOLimelight(
-        //             "limelight-right",
-        //             () -> RobotState.getInstance().getEstimatedPose().getRotation()));
-
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                pose -> {});
-
-        vision = new Vision(RobotState.getInstance());
+         vision =
+             new Vision(
+                 RobotState.getInstance(),
+                 new VisionIOLimelight4(
+                     "limelight-right",
+                     () -> RobotState.getInstance().getEstimatedPose().getRotation()));
 
         intakeRollers = new IntakeRollers(new IntakeRollersIOTalonFX(portConfiguration), RobotState.getInstance());
         drum = new Drum(new DrumIOTalonFX(portConfiguration), RobotState.getInstance());
@@ -100,6 +91,7 @@ public class RobotContainer {
         hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
         feeder = new Feeder(new FeederIOTalonFX(portConfiguration), RobotState.getInstance());
 
+        actions = constructActions();
         configureButtonBindings();
         break;
 
@@ -146,14 +138,15 @@ public class RobotContainer {
                             intakeRollers = new IntakeRollers(new IntakeRollersIO() {}, RobotState.getInstance());
                             drum = new Drum(new DrumIO() {}, RobotState.getInstance());
                             hopper = new Hopper(new HopperIO() {
-                                
+
                             }, RobotState.getInstance());
                             hood = new Hood(new HoodIO() {
-                                
+
                             }, RobotState.getInstance());
           feeder = new Feeder(new FeederIO() {
           }, RobotState.getInstance());
 
+          actions = constructActions();
         configureSimButtonBindings();
         break;
 
@@ -173,15 +166,16 @@ public class RobotContainer {
         drum = new Drum(new DrumIO() {}, RobotState.getInstance());
 
         hopper = new Hopper(new HopperIO() {
-                                
+
                             }, RobotState.getInstance());
                             hood = new Hood(new HoodIO() {
-                                
+
                             }, RobotState.getInstance());
 
                             feeder = new Feeder(new FeederIO() {
                             }, RobotState.getInstance());
 
+                            actions = constructActions();
         configureButtonBindings();
         break;
     }
@@ -199,26 +193,18 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
-        DriveCommands.joystickDriveWithX(
-            drive,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            () ->
-                Math.pow(Math.abs(driver.getRightX()), 0.75) * (driver.getRightX() > 0 ? -1 : 1)));
+            actions.joystickDrive()
+    );
 
-    driver.rightTrigger()
-            .onFalse(Commands.runOnce(() -> drum.setWantedState(Drum.WantedState.IDLE)))
-            .onFalse(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.IDLE)))
-            .onFalse(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.IDLE)))
-            .onFalse(Commands.runOnce(() -> feeder.setWantedState(Feeder.WantedState.IDLE)))
-            .onTrue(Commands.runOnce(() -> drum.setWantedState(Drum.WantedState.SCORING)))
-            .onTrue(Commands.runOnce(() -> hood.setWantedState(Hood.WantedState.SCORING)))
-            .and(drum::aboveSetpoint)
-            .onTrue(Commands.runOnce(() -> hopper.setWantedState(Hopper.WantedState.ON)))
-            .onTrue(Commands.runOnce(() -> feeder.setWantedState(Feeder.WantedState.FEED_SCORING)));
+    SuperstructureCommands.getScoringDummy().setDefaultCommand(actions.idleSuperstructure());
+    SuperstructureCommands.getIntakeDummy().setDefaultCommand(actions.stopIntake());
 
-    driver.a().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.INTAKE)));
-    driver.b().onTrue(Commands.runOnce(() -> intakeRollers.setWantedState(WantedState.IDLE)));
+    driver.rightTrigger().whileTrue(actions.teleopRequestScoring());
+
+    driver.a().onTrue(actions.intake());
+    driver.b().onTrue(actions.stopIntake());
+
+    //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
   }
 
   private void configureSimButtonBindings() {
@@ -232,5 +218,16 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  private Actions constructActions() {
+      return Actions.builder()
+              .drive(drive)
+              .drum(drum)
+              .hood(hood)
+              .feeder(feeder)
+              .hopper(hopper)
+              .intakeRollers(intakeRollers)
+              .build();
   }
 }
