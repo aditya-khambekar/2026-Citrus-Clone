@@ -34,6 +34,10 @@ public class Pivot extends FullSubsystem {
         sysID = new PivotSysID.PivotSysIDWPI(this, inputs);
     }
 
+    public void setWantedState(WantedState wantedState) {
+        this.wantedState = wantedState;
+    }
+
     public enum WantedState {
         IDLE,
         DOWN,
@@ -54,6 +58,7 @@ public class Pivot extends FullSubsystem {
         io.updateInputs(inputs);
         Logger.processInputs("Pivot", inputs);
         state.setPivotMechanismRotations(inputs.mechanismRotations);
+        state.isPivotUp = inputs.encoderRotations < (PivotConstants.UP_ENCODER_POSITION + PivotConstants.DOWN_ENCODER_POSITION) / 2.0;
     }
 
     @Override

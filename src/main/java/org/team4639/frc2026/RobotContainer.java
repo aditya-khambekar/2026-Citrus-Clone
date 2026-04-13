@@ -200,6 +200,10 @@ public class RobotContainer {
     SuperstructureCommands.getIntakeDummy().setDefaultCommand(actions.stopIntake());
 
     driver.rightTrigger().whileTrue(actions.teleopRequestScoring());
+    driver.rightBumper().whileTrue(actions.agitate());
+
+    driver.leftTrigger().whileTrue(actions.teleopRequestPassing());
+    driver.leftBumper().whileTrue(actions.agitate());
 
     driver.a().onTrue(actions.intake());
     driver.b().onTrue(actions.stopIntake());

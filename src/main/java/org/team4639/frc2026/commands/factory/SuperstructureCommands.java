@@ -9,6 +9,7 @@ import org.team4639.frc2026.subsystems.feeder.Feeder;
 import org.team4639.frc2026.subsystems.hood.Hood;
 import org.team4639.frc2026.subsystems.hopper.Hopper;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers;
+import org.team4639.frc2026.subsystems.pivot.Pivot;
 
 public class SuperstructureCommands {
     @Getter
@@ -19,6 +20,8 @@ public class SuperstructureCommands {
     private static final SubsystemBase pivotDummy = new SubsystemBase() {};
     @Getter
     private static final SubsystemBase extensionDummy = new SubsystemBase() {};
+
+    private static final double AGITATE_PERIOD = 1.0;
 
     public static Command idle(Drum drum, Hood hood, Feeder feeder, Hopper hopper) {
         return new SequentialCommandGroup(
@@ -104,5 +107,37 @@ public class SuperstructureCommands {
                 }, intakeDummy),
                 Commands.idle(intakeDummy)
         );
+    }
+
+    public Command pivotUp(Pivot pivot){
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    pivot.setWantedState(Pivot.WantedState.IDLE);
+                }, pivotDummy),
+                Commands.idle(pivotDummy)
+        );
+    }
+
+    public Command pivotDown(Pivot pivot){
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    pivot.setWantedState(Pivot.WantedState.DOWN);
+                }, pivotDummy),
+                Commands.idle(pivotDummy)
+        );
+    }
+
+    public static Command pivotUpDown(Pivot pivot) {
+        return new SequentialCommandGroup(
+                pivotUp(pivot).withTimeout(AGITATE_PERIOD/2.0),
+                pivotDown(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+        ).repeatedly();
+    }
+
+    public static Command pivotDownUp(Pivot pivot) {
+        return new SequentialCommandGroup(
+                pivotDown(pivot).withTimeout(AGITATE_PERIOD/2.0),
+                pivotUp(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+        ).repeatedly();
     }
 }

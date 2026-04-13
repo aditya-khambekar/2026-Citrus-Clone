@@ -44,7 +44,7 @@ public class DriveCommands {
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
   private static final double ALIGN_FF = 1.0;
 
-    private static final PIDController anglePID = new PIDController(4, 0, 0.05);
+    private static final PIDController anglePID = new PIDController(6, 0, 0.1);
 
     static {
         SmartDashboard.putData("Angle PID", anglePID);
@@ -217,7 +217,7 @@ public class DriveCommands {
 
         if (MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vxMetersPerSecond, 1e-1)
                 && MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vyMetersPerSecond, 1e-1)
-                && MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.omegaRadiansPerSecond, 1e-1))
+                && atScoringGoal())
             drive.stopWithX();
         else
             drive.runVelocity(
@@ -289,9 +289,9 @@ public class DriveCommands {
                         launcherToRobot.times(1.0 - corScalar),
                         RobotState.getInstance().getEstimatedPose().getRotation().plus(Rotation2d.kZero));
 
-        if (MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vxMetersPerSecond, 1e-2)
-                && MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vyMetersPerSecond, 1e-2)
-                && MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.omegaRadiansPerSecond, 1e-2))
+        if (MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vxMetersPerSecond, 1e-1)
+                && MathUtil.isNear(0, fieldRelativeSpeedsWithOffset.vyMetersPerSecond, 1e-1)
+                && atPassingGoal())
             drive.stopWithX();
         else
             drive.runVelocity(

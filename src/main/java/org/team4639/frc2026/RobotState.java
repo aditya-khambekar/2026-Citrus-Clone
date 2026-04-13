@@ -99,6 +99,10 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
   /** Assume gyro starts at zero. */
   private Rotation2d gyroOffset = Rotation2d.kZero;
 
+  @Setter
+  @AutoLogOutput(key = "isPivotUp")
+  public boolean isPivotUp;
+
   // -------------------------------------------------------------------------
   // Chassis Speeds
   // -------------------------------------------------------------------------
