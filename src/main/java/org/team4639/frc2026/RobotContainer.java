@@ -203,8 +203,6 @@ public class RobotContainer {
 
     driver.a().onTrue(actions.intake());
     driver.b().onTrue(actions.stopIntake());
-
-    //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
   }
 
   private void configureSimButtonBindings() {

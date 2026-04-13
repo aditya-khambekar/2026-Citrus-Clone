@@ -29,7 +29,7 @@ import org.team4639.frc2026.constants.launch.LaunchSetpoint;
 import org.team4639.frc2026.constants.launch.LookupTables;
 import org.team4639.frc2026.subsystems.drive.Drive;
 import org.team4639.frc2026.subsystems.vision.Vision.VisionConsumer;
-import org.team4639.frc2026.util.ValueCacher;
+import org.team4639.lib.util.ValueCacher;
 import org.team4639.lib.led.pattern.LEDPattern;
 import org.team4639.lib.util.LoggedTunableNumber;
 import org.team4639.lib.util.PoseEstimator;
