@@ -240,6 +240,11 @@ public class DriveCommands {
                 .setSetpointSpeeds(ChassisSpeeds.discretize(fieldRelativeSpeedsWithFullOffset, 0.02));
     }
 
+    public static Command launchWithTranslationalSpeed(
+            Drive drive, Supplier<Translation2d> fieldRelativeLinearVelocity) {
+        return drive.run(() -> runSOTM(drive, fieldRelativeLinearVelocity.get()));
+    }
+
     private static void runPOTM(Drive drive, Translation2d fieldRelativeLinearVelocity) {
         final var setpoint = RobotState.getInstance().getPassingSetpoint(drive);
         final var nextSetpoint = RobotState.getInstance().getNextPassingSetpoint(drive);

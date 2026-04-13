@@ -39,6 +39,8 @@ import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+
+import frc.robot.lib.BLine.FollowPath;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.Constants;
@@ -73,6 +75,8 @@ public class Drive extends SubsystemBase {
               TunerConstants.FrontLeft.SlipCurrent,
               1),
           getModuleTranslations());
+
+  public static FollowPath.Builder pathBuilder = null;
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -138,6 +142,18 @@ public class Drive extends SubsystemBase {
         (targetPose) -> {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
+
+      pathBuilder =
+              new FollowPath.Builder(
+                      this,
+                      this::getPose,
+                      this::getChassisSpeeds,
+                      this::runVelocity,
+                      new PIDController(5.0, 0.0, 0.0), // Translation controller
+                      new PIDController(3.0, 0.0, 0.0), // Rotation controller
+                      new PIDController(2.0, 0.0, 0.0))
+                      .withPoseReset(RobotState.getInstance()::resetPose)
+                      .withShouldFlip(() -> false);
 
     // Configure SysId
     driveSysID =
