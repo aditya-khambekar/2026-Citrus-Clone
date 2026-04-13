@@ -109,7 +109,7 @@ public class SuperstructureCommands {
         );
     }
 
-    public Command pivotUp(Pivot pivot){
+    public static Command pivotUp(Pivot pivot){
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     pivot.setWantedState(Pivot.WantedState.IDLE);
@@ -118,7 +118,7 @@ public class SuperstructureCommands {
         );
     }
 
-    public Command pivotDown(Pivot pivot){
+    public static Command pivotDown(Pivot pivot){
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     pivot.setWantedState(Pivot.WantedState.DOWN);
