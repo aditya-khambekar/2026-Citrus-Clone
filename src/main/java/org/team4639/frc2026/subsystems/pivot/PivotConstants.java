@@ -17,6 +17,10 @@ public class PivotConstants {
     public static final double IDLE_MECHANISM_ROTATIONS = Units.degreesToRotations(45);
     public static final double DOWN_MECHANISM_ROTATIONS = IDLE_MECHANISM_ROTATIONS + MECHANISM_RANGE_ROTATIONS;
 
+    public static final double STOWED_ENCODER_POSITION = -0.376953;
+    public static final double DOWN_ENCODER_POSITION = 0;
+    public static final double UP_ENCODER_POSITION = 0;
+
     // Volts per MECHANISM rotation
     public static final double kP = 3;
     public static final double kI = 0;

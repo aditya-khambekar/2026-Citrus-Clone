@@ -37,7 +37,7 @@ public class PivotIOSim implements PivotIO {
     }
 
     @Override
-    public void setSetpointMechanismRotations(double mechanismRotations) {
+    public void setSetpointEncoderRotations(double mechanismRotations) {
         this.appliedVolts = pidController.calculate(Units.radiansToRotations(pivotSim.getAngleRads()), mechanismRotations);
         pivotSim.setInputVoltage(appliedVolts);
     }
