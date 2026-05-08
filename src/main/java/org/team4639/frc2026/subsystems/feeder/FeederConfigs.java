@@ -25,7 +25,10 @@ public class FeederConfigs {
 
         feederConfig.Audio.BeepOnConfig = false;
 
-        feederConfig.Slot0.kP = 0;
+        feederConfig.MotorOutput.PeakForwardDutyCycle = 1.0;
+        feederConfig.MotorOutput.PeakReverseDutyCycle = 0;
+
+        feederConfig.Slot0.kP = 99999;
         feederConfig.Slot0.kI = 0;
         feederConfig.Slot0.kD = 0;
         feederConfig.Slot0.kS = 0;

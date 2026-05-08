@@ -14,10 +14,11 @@ public interface PivotIO {
         public double mechanismRotations;
         public double mechanismRotationsPerSecond;
         public boolean connected;
+        public double encoderRotations;
     }
 
     default void setVoltage(double volts) {}
-    default void setSetpointMechanismRotations(double mechanismRotations) {}
+    default void setSetpointEncoderRotations(double mechanismRotations) {}
     default void setPositionMechanismRotations(double mechanismRotations) {}
     default void updateInputs(PivotIOInputs inputs) {}
     default void setBrakeMode(boolean isBrakeMode) {}

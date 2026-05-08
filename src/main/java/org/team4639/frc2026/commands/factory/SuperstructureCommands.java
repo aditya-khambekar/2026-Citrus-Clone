@@ -2,8 +2,14 @@
 
 package org.team4639.frc2026.commands.factory;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.*;
 import lombok.Getter;
+import org.team4639.frc2026.FieldConstants;
+import org.team4639.frc2026.RobotState;
 import org.team4639.frc2026.subsystems.drum.Drum;
 import org.team4639.frc2026.subsystems.feeder.Feeder;
 import org.team4639.frc2026.subsystems.hood.Hood;
@@ -21,6 +27,8 @@ public class SuperstructureCommands {
     @Getter
     private static final SubsystemBase extensionDummy = new SubsystemBase() {};
 
+    private static final double AGITATE_PERIOD = 1.0;
+
     public static Command idle(Drum drum, Hood hood, Feeder feeder, Hopper hopper) {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
@@ -36,7 +44,7 @@ public class SuperstructureCommands {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     drum.setWantedState(Drum.WantedState.SCORING);
-                    hood.setWantedState(Hood.WantedState.SCORING);
+                    hood.setWantedState(avoidTrench(Hood.WantedState.SCORING, RobotState.getInstance()));
                     feeder.setWantedState(Feeder.WantedState.IDLE);
                     hopper.setWantedState(Hopper.WantedState.IDLE);
                 }, scoringDummy),
@@ -48,7 +56,7 @@ public class SuperstructureCommands {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     drum.setWantedState(Drum.WantedState.SCORING);
-                    hood.setWantedState(Hood.WantedState.SCORING);
+                    hood.setWantedState(avoidTrench(Hood.WantedState.SCORING, RobotState.getInstance()));
                     feeder.setWantedState(Feeder.WantedState.FEED_SCORING);
                     hopper.setWantedState(Hopper.WantedState.ON);
                 }, scoringDummy),
@@ -60,7 +68,7 @@ public class SuperstructureCommands {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     drum.setWantedState(Drum.WantedState.PASSING);
-                    hood.setWantedState(Hood.WantedState.PASSING);
+                    hood.setWantedState(avoidTrench(Hood.WantedState.PASSING, RobotState.getInstance()));
                     feeder.setWantedState(Feeder.WantedState.IDLE);
                     hopper.setWantedState(Hopper.WantedState.IDLE);
                 }, scoringDummy),
@@ -72,7 +80,7 @@ public class SuperstructureCommands {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     drum.setWantedState(Drum.WantedState.PASSING);
-                    hood.setWantedState(Hood.WantedState.PASSING);
+                    hood.setWantedState(avoidTrench(Hood.WantedState.PASSING, RobotState.getInstance()));
                     feeder.setWantedState(Feeder.WantedState.FEED_PASSING);
                     hopper.setWantedState(Hopper.WantedState.ON);
                 }, scoringDummy),
@@ -107,7 +115,16 @@ public class SuperstructureCommands {
         );
     }
 
-    public static Command extend(Pivot pivot) {
+    public static Command pivotUp(Pivot pivot){
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    pivot.setWantedState(Pivot.WantedState.IDLE);
+                }, pivotDummy),
+                Commands.idle(pivotDummy)
+        );
+    }
+
+    public static Command pivotDown(Pivot pivot){
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     pivot.setWantedState(Pivot.WantedState.DOWN);
@@ -116,13 +133,37 @@ public class SuperstructureCommands {
         );
     }
 
-
-    public static Command retract(Pivot pivot) {
+    public static Command pivotUpDown(Pivot pivot) {
         return new SequentialCommandGroup(
-                new InstantCommand(() -> {
-                    pivot.setWantedState(Pivot.WantedState.IDLE);
-                }, pivotDummy),
-                Commands.idle(pivotDummy)
-        );
+                pivotUp(pivot).withTimeout(AGITATE_PERIOD/2.0),
+                pivotDown(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+        ).repeatedly();
+    }
+
+    public static Command pivotDownUp(Pivot pivot) {
+        return new SequentialCommandGroup(
+                pivotDown(pivot).withTimeout(AGITATE_PERIOD/2.0),
+                pivotUp(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+        ).repeatedly();
+    }
+
+    private static Hood.WantedState avoidTrench(Hood.WantedState desiredState, RobotState state) {
+        ChassisSpeeds speeds = state.getChassisSpeeds();
+        Pose2d currentRobotPose = state.getEstimatedPose();
+        Pose2d nextRobotPose =
+                currentRobotPose.plus(
+                        new Transform2d(
+                                speeds.vxMetersPerSecond * 0.8,
+                                speeds.vyMetersPerSecond * 0.8,
+                                Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * 0.8)));
+
+        if (Math.signum(nextRobotPose.getX() - FieldConstants.LinesVertical.hubCenter)
+                != Math.signum(currentRobotPose.getX() - FieldConstants.LinesVertical.hubCenter)
+                || Math.signum(nextRobotPose.getX() - FieldConstants.LinesVertical.oppHubCenter)
+                != Math.signum(currentRobotPose.getX() - FieldConstants.LinesVertical.oppHubCenter)) {
+            return Hood.WantedState.IDLE;
+        }
+
+        return desiredState;
     }
 }

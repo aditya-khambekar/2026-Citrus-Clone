@@ -211,12 +211,16 @@ public class RobotContainer {
     SuperstructureCommands.getIntakeDummy().setDefaultCommand(actions.stopIntake());
 
     driver.rightTrigger().whileTrue(actions.teleopRequestScoring());
+    driver.rightBumper().whileTrue(actions.agitate());
+
+    driver.leftTrigger().whileTrue(actions.teleopRequestPassing());
+    driver.leftBumper().whileTrue(actions.agitate());
 
     driver.a().onTrue(actions.intake());
     driver.b().onTrue(actions.stopIntake());
 
-    driver.povUp().onTrue(actions.intakeExtend());
-    driver.povDown().onTrue(actions.intakeRetract());
+    driver.povUp().onTrue(actions.pivotUp());
+    driver.povDown().onTrue(actions.pivotDown());
 
     //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
   }

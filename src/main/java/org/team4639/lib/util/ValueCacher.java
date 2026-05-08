@@ -1,6 +1,6 @@
 /* Copyright (c) 2025-2026 FRC 4639. */
 
-package org.team4639.frc2026.util;
+package org.team4639.lib.util;
 
 import java.util.HashSet;
 import java.util.function.Supplier;

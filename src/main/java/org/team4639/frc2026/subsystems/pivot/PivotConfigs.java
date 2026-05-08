@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 public class PivotConfigs {
     public static TalonFXConfiguration pivotMotorConfig = createPivotConfig();
@@ -36,6 +37,7 @@ public class PivotConfigs {
 
     private static CANcoderConfiguration createEncoderConfig() {
         CANcoderConfiguration config = new CANcoderConfiguration();
+        config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         return config;
     }
 }

@@ -11,12 +11,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
-import org.team4639.frc2026.util.ValueCacher;
+import org.team4639.lib.util.ValueCacher;
 import org.team4639.lib.util.FullSubsystem;
 
 import static edu.wpi.first.units.Units.Volts;
-
-import javax.annotation.processing.Generated;
 
 public class VerticalExtension extends FullSubsystem {
     private final RobotState state;

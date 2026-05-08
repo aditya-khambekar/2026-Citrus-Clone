@@ -7,8 +7,6 @@ import lombok.Setter;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import javax.annotation.processing.Generated;
-
 import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.RobotState;
 import org.team4639.lib.util.FullSubsystem;
@@ -36,6 +34,10 @@ public class Pivot extends FullSubsystem {
         sysID = new PivotSysID.PivotSysIDWPI(this, inputs);
     }
 
+    public void setWantedState(WantedState wantedState) {
+        this.wantedState = wantedState;
+    }
+
     public enum WantedState {
         IDLE,
         DOWN,
@@ -43,7 +45,6 @@ public class Pivot extends FullSubsystem {
     }
 
     public enum SystemState {
-        ZERO, // zero against up position hardstop
         IDLE,
         DOWN,
         MANUAL
@@ -51,13 +52,14 @@ public class Pivot extends FullSubsystem {
 
     @Setter
     private WantedState wantedState = WantedState.IDLE;
-    private SystemState systemState = SystemState.ZERO;
+    private SystemState systemState = SystemState.IDLE;
 
     @Override
     public void periodicBeforeScheduler() {
         io.updateInputs(inputs);
         Logger.processInputs("Pivot", inputs);
         state.setPivotMechanismRotations(inputs.mechanismRotations);
+        state.isPivotUp = inputs.encoderRotations < (PivotConstants.UP_ENCODER_POSITION + PivotConstants.DOWN_ENCODER_POSITION) / 2.0;
     }
 
     @Override
@@ -74,15 +76,7 @@ public class Pivot extends FullSubsystem {
     private SystemState handleStateTransitions() {
         return switch(wantedState) {
             case DOWN -> SystemState.DOWN;
-            case IDLE -> {
-                if (systemState == SystemState.ZERO) {
-                    yield Math.abs(inputs.amps) > PivotConstants.ZERO_AMPS
-                            ? SystemState.IDLE
-                            : SystemState.ZERO;
-                } else {
-                    yield SystemState.IDLE;
-                }
-            }
+            case IDLE -> SystemState.IDLE;
             case MANUAL -> SystemState.MANUAL;
         };
     }
@@ -95,9 +89,6 @@ public class Pivot extends FullSubsystem {
         }
 
         switch (systemState) {
-            case ZERO:
-                handleZero();
-                break;
             case DOWN:
                 handleDown();
                 break;
@@ -110,20 +101,17 @@ public class Pivot extends FullSubsystem {
         }
     }
 
-    private void handleZero() {
-        io.setVoltage(PivotConstants.ZERO_VOLTAGE);
-    }
-
     private void handleDown() {
-        io.setSetpointMechanismRotations(PivotConstants.DOWN_MECHANISM_ROTATIONS);
+        io.setSetpointEncoderRotations(PivotConstants.DOWN_ENCODER_POSITION);
     }
 
     private void handleIdle() {
-        io.setSetpointMechanismRotations(PivotConstants.IDLE_MECHANISM_ROTATIONS);
+        if (inputs.encoderRotations < PivotConstants.UP_ENCODER_POSITION) io.setVoltage(0);
+        else io.setSetpointEncoderRotations(PivotConstants.UP_ENCODER_POSITION);
     }
 
     private void handleManual() {
-        io.setSetpointMechanismRotations(manualMechanismRotations);
+        io.setSetpointEncoderRotations(manualMechanismRotations);
     }
 
     protected void setVoltage(Voltage volts){
