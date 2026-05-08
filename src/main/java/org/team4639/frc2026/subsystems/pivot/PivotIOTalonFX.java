@@ -31,8 +31,6 @@ public class PivotIOTalonFX implements PivotIO{
     private final StatusSignal<Current> amps;
     private final StatusSignal<Temperature> celsius;
 
-    private final PIDController controller;
-
     public PivotIOTalonFX(PortConfiguration portConfiguration) {
         this.pivotMotor = Phoenix6Factory.createDefaultTalon(portConfiguration.intakePivot);
         this.pivotEncoder = Phoenix6Factory.createCANcoder(portConfiguration.intakePivotEncoder);
@@ -49,9 +47,6 @@ public class PivotIOTalonFX implements PivotIO{
 
         RobotState.disabled.onTrue(Commands2.action(() -> PhoenixUtil.tryUntilOk(5, () -> pivotMotor.setNeutralMode(NeutralModeValue.Coast))));
         RobotState.disabled.onFalse(Commands2.action(() -> PhoenixUtil.tryUntilOk(5, () -> pivotMotor.setNeutralMode(NeutralModeValue.Brake))));
-
-        this.controller = new PIDController(0, 0, 0);
-        SmartDashboard.putData("Pivot PID", controller);
     }
 
     @Override
@@ -61,7 +56,7 @@ public class PivotIOTalonFX implements PivotIO{
 
     @Override
     public void setSetpointEncoderRotations(double encoderRotations) {
-        setVoltage(controller.calculate(pivotEncoder.getAbsolutePosition().getValueAsDouble(), encoderRotations));
+        pivotMotor.setControl(positionVoltage.withPosition(encoderRotations));
     }
 
     @Override
