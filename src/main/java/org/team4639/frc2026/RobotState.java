@@ -293,12 +293,12 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
   // launch setpoints
   public LaunchSetpoint getScoringSetpoint(Object caller) {
     var setpoint = currentScoringSetpoint.get(caller);
-    return new LaunchSetpoint(setpoint.drivetrainRotations(), Units.degreesToRotations(desiredHoodDegrees.get()), desiredShooterRPM.get());
+    return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.drumRotationsPerMinute(), setpoint.hoodRotations());
   }
 
   public LaunchSetpoint getNextScoringSetpoint(Object caller) {
       var setpoint = nextScoringSetpoint.get(caller);
-      return new LaunchSetpoint(setpoint.drivetrainRotations(), Units.degreesToRotations(desiredHoodDegrees.get()), desiredShooterRPM.get());
+      return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.drumRotationsPerMinute(), setpoint.hoodRotations());
   }
 
   public LaunchSetpoint getPassingSetpoint(Object caller) {

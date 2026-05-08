@@ -9,6 +9,7 @@ import org.team4639.frc2026.subsystems.feeder.Feeder;
 import org.team4639.frc2026.subsystems.hood.Hood;
 import org.team4639.frc2026.subsystems.hopper.Hopper;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers;
+import org.team4639.frc2026.subsystems.pivot.Pivot;
 
 public class SuperstructureCommands {
     @Getter
@@ -103,6 +104,25 @@ public class SuperstructureCommands {
                     intakeRollers.setWantedState(IntakeRollers.WantedState.OUTTAKE);
                 }, intakeDummy),
                 Commands.idle(intakeDummy)
+        );
+    }
+
+    public static Command extend(Pivot pivot) {
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    pivot.setWantedState(Pivot.WantedState.DOWN);
+                }, pivotDummy),
+                Commands.idle(pivotDummy)
+        );
+    }
+
+
+    public static Command retract(Pivot pivot) {
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    pivot.setWantedState(Pivot.WantedState.IDLE);
+                }, pivotDummy),
+                Commands.idle(pivotDummy)
         );
     }
 }

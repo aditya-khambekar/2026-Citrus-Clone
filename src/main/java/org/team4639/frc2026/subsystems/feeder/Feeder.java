@@ -65,22 +65,7 @@ public class Feeder extends FullSubsystem {
     public FeederSetpoint getSetpoint() {
         return switch(wantedState) {
             case IDLE -> FeederSetpoint.IDLE;
-            case FEED_PASSING -> {
-                double currentDrumRPS = state.getPassingSetpoint(this).drumRotationsPerMinute() / 60.0;
-                double nextDrumRPS = state.getNextPassingSetpoint(this).drumRotationsPerMinute() / 60.0;
-
-                double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
-
-                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM.get(), drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM.get());
-            }
-            case FEED_SCORING -> {
-                double currentDrumRPS = state.getScoringSetpoint(this).drumRotationsPerMinute() / 60.0;
-                double nextDrumRPS = state.getNextScoringSetpoint(this).drumRotationsPerMinute() / 60.0;
-
-                double drumRPSS = (nextDrumRPS - currentDrumRPS) / 0.02;
-
-                yield new FeederSetpoint(currentDrumRPS * FeederConstants.FEED_PROPORTION_OF_DRUM.get(), drumRPSS * FeederConstants.FEED_PROPORTION_OF_DRUM.get());
-            }
+            case FEED_PASSING, FEED_SCORING -> new FeederSetpoint(FeederConstants.FEED_SPEED.get(), 0.0);
         };
     }
 
@@ -113,7 +98,7 @@ public class Feeder extends FullSubsystem {
     }
 
     private void handleIdle() {
-        io.setSetpointMechanismRotationsPerSecond(FeederConstants.IDLE_MECHANISM_RPM);
+        io.setVoltage(0);
     }
 
     private void handleFeed() {

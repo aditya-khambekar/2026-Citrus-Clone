@@ -29,6 +29,9 @@ import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollersIO;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollersIOTalonFX;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers.WantedState;
+import org.team4639.frc2026.subsystems.pivot.Pivot;
+import org.team4639.frc2026.subsystems.pivot.PivotIO;
+import org.team4639.frc2026.subsystems.pivot.PivotIOTalonFX;
 import org.team4639.frc2026.subsystems.vision.*;
 import org.team4639.frc2026.util.PortConfiguration;
 import org.team4639.lib.oi.DeadbandXboxController;
@@ -54,6 +57,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final Hood hood;
   private final Feeder feeder;
+  private final Pivot pivot;
 
   // Controller
   private final CommandXboxController driver = OI.driver;
@@ -90,6 +94,7 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIOTalonFX(portConfiguration), RobotState.getInstance());
         hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
         feeder = new Feeder(new FeederIOTalonFX(portConfiguration), RobotState.getInstance());
+        pivot = new Pivot(new PivotIOTalonFX(portConfiguration), RobotState.getInstance());
 
         actions = constructActions();
         configureButtonBindings();
@@ -145,6 +150,9 @@ public class RobotContainer {
                             }, RobotState.getInstance());
           feeder = new Feeder(new FeederIO() {
           }, RobotState.getInstance());
+          pivot = new Pivot(new PivotIO() {
+
+          }, RobotState.getInstance());
 
           actions = constructActions();
         configureSimButtonBindings();
@@ -168,14 +176,17 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIO() {
 
                             }, RobotState.getInstance());
-                            hood = new Hood(new HoodIO() {
+        hood = new Hood(new HoodIO() {
 
-                            }, RobotState.getInstance());
+        }, RobotState.getInstance());
 
-                            feeder = new Feeder(new FeederIO() {
-                            }, RobotState.getInstance());
+        feeder = new Feeder(new FeederIO() {
+        }, RobotState.getInstance());
 
-                            actions = constructActions();
+        actions = constructActions();
+        pivot = new Pivot(new PivotIO() {
+
+        }, RobotState.getInstance());
         configureButtonBindings();
         break;
     }
@@ -204,6 +215,9 @@ public class RobotContainer {
     driver.a().onTrue(actions.intake());
     driver.b().onTrue(actions.stopIntake());
 
+    driver.povUp().onTrue(actions.intakeExtend());
+    driver.povDown().onTrue(actions.intakeRetract());
+
     //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
   }
 
@@ -228,6 +242,7 @@ public class RobotContainer {
               .feeder(feeder)
               .hopper(hopper)
               .intakeRollers(intakeRollers)
+              .pivot(pivot)
               .build();
   }
 }

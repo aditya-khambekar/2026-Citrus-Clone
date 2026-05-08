@@ -14,19 +14,20 @@ public class PivotConfigs {
     private static TalonFXConfiguration createPivotConfig() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
-        config.CurrentLimits.StatorCurrentLimit = 20;
-        config.CurrentLimits.SupplyCurrentLimit = 20;
+        config.CurrentLimits.StatorCurrentLimit = 60;
+        config.CurrentLimits.SupplyCurrentLimit = 60;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        config.Feedback.RotorToSensorRatio = 1.0;
-        config.Feedback.SensorToMechanismRatio = 1.0 / PivotConstants.MOTOR_TO_PIVOT_REDUCTION;
-        config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        config.Feedback.RotorToSensorRatio = 1.0 / PivotConstants.MOTOR_TO_ENCODER_REDUCTION;
+        config.Feedback.SensorToMechanismRatio = 1.0;
+        config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+        config.Feedback.FeedbackRemoteSensorID = 50;
 
         // up is negative, down is positive
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-        config.Audio.BeepOnConfig = false;
+        config.Audio.BeepOnConfig = true;
 
         config.Slot0.kP = PivotConstants.kP;
 

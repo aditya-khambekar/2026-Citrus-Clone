@@ -49,6 +49,7 @@ public class Pivot extends FullSubsystem {
         MANUAL
     }
 
+    @Setter
     private WantedState wantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.ZERO;
 

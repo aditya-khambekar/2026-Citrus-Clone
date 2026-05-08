@@ -21,14 +21,10 @@ public enum VisionFilters {
               || observation.pose().getY() < 0.0
               || observation.pose().getY() > aprilTagLayout.getFieldWidth()),
   ROTS3D(
-      observation -> {
-        return observation.pose().getRotation().getMeasureX().abs(Rotations) > 0.02
-            || observation.pose().getRotation().getMeasureY().abs(Rotations) > 0.02;
-      }),
+      observation -> observation.pose().getRotation().getMeasureX().abs(Rotations) > 0.02
+          || observation.pose().getRotation().getMeasureY().abs(Rotations) > 0.02),
   DISTANCE(
-      observation -> {
-        return observation.averageTagDistance() > 3.5;
-      });
+      observation -> observation.averageTagDistance() > 3.5);
 
   /** Returns true if we want to reject the pose and false if we keep it */
   private final Predicate<PoseObservation> test;

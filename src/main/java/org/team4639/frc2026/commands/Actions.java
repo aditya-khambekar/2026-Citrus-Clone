@@ -46,20 +46,20 @@ public class Actions {
 
     public Command teleopRequestScoring(){
         return new ParallelCommandGroup(
-                DriveCommands.joystickDriveWhileScoring(
-                        drive,
-                        () -> -driver.getLeftY(),
-                        () -> -driver.getLeftX()
-                ),
+//                DriveCommands.joystickDriveWhileScoring(
+//                        drive,
+//                        () -> -driver.getLeftY(),
+//                        () -> -driver.getLeftX()
+//                ),
                 new SequentialCommandGroup(
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper)
                                 .until(drum::aboveSetpoint),
                         new RepeatCommand(
                                 new SequentialCommandGroup(
-                                        SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper)
-                                                .until(DriveCommands::atScoringGoal),
+//                                        SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper)
+//                                                .until(DriveCommands::atScoringGoal),
                                         SuperstructureCommands.score(drum, hood, feeder, hopper)
-                                                .until(() -> !DriveCommands.atScoringGoal())
+//                                                .until(() -> !DriveCommands.atScoringGoal())
                                 )
                         )
                 )
@@ -68,20 +68,20 @@ public class Actions {
 
     public Command teleopRequestPassing(){
         return new ParallelCommandGroup(
-                DriveCommands.joystickDriveWhilePassing(
-                        drive,
-                        () -> -driver.getLeftY(),
-                        () -> -driver.getLeftX()
-                ),
+//                DriveCommands.joystickDriveWhilePassing(
+//                        drive,
+//                        () -> -driver.getLeftY(),
+//                        () -> -driver.getLeftX()
+//                ),
                 new SequentialCommandGroup(
                         SuperstructureCommands.passingSpinup(drum, hood, feeder, hopper)
                                 .until(drum::aboveSetpoint),
                         new RepeatCommand(
                                 new SequentialCommandGroup(
                                         SuperstructureCommands.passingSpinup(drum, hood, feeder, hopper)
-                                                .until(DriveCommands::atPassingGoal),
-                                        SuperstructureCommands.pass(drum, hood, feeder, hopper)
-                                                .until(() -> !DriveCommands.atPassingGoal())
+//                                                .until(DriveCommands::atPassingGoal),
+//                                        SuperstructureCommands.pass(drum, hood, feeder, hopper)
+//                                                .until(() -> !DriveCommands.atPassingGoal())
                                 )
                         )
                 )
@@ -93,5 +93,13 @@ public class Actions {
     }
     public Command stopIntake() {
         return SuperstructureCommands.stopIntake(intakeRollers);
+    }
+
+    public Command intakeExtend() {
+        return SuperstructureCommands.extend(pivot);
+    }
+
+    public Command intakeRetract() {
+        return SuperstructureCommands.retract(pivot);
     }
 }
