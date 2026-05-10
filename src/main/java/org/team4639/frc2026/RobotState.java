@@ -14,6 +14,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import java.util.*;
 
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -37,6 +38,9 @@ import org.team4639.lib.util.VirtualSubsystem;
 import org.team4639.lib.util.geometry.AllianceFlipUtil;
 import org.team4639.lib.util.geometry.GeomUtil;
 
+import static edu.wpi.first.units.Units.Minute;
+import static edu.wpi.first.units.Units.Rotations;
+
 /**
  * RobotState handles all information involving the current state of the robot.
  *
@@ -47,273 +51,287 @@ import org.team4639.lib.util.geometry.GeomUtil;
 @ExtensionMethod(GeomUtil.class)
 public class RobotState extends VirtualSubsystem implements VisionConsumer {
 
-  // -------------------------------------------------------------------------
-  // Singleton
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Singleton
+    // -------------------------------------------------------------------------
 
-  private static RobotState instance = new RobotState();
+    private static RobotState instance = new RobotState();
 
-  public static synchronized RobotState getInstance() {
-    return instance = Objects.requireNonNullElseGet(instance, RobotState::new);
-  }
-
-  // -------------------------------------------------------------------------
-  // Constants & Configuration
-  // -------------------------------------------------------------------------
-
-  double poseBufferSizeSec = 2.0;
-
-  // SmartDashboard / Logger keys
-  private final String ROBOT_FIELD_INTERNAL_KEY = "/Internal/Robot Pose";
-  private final String ROBOT_FIELD_TRUE_KEY = "/RobotState/Robot Pose";
-  private final String CHOREO_SETPOINT_KEY = "/Internal/Choreo Setpoint";
-
-  // -------------------------------------------------------------------------
-  // Pose Buffers
-  // -------------------------------------------------------------------------
-
-  private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
-      TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
-
-  private final TimeInterpolatableBuffer<Pose2d> odometryBuffer =
-      TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
-
-  private final TimeInterpolatableBuffer<Pose2d> choreoSetpoints =
-      TimeInterpolatableBuffer.createBuffer(0.05);
-
-  // -------------------------------------------------------------------------
-  // Odometry State
-  // -------------------------------------------------------------------------
-
-  private final SwerveDriveKinematics kinematics =
-      new SwerveDriveKinematics(Drive.getModuleTranslations());
-
-  private SwerveModulePosition[] lastWheelPositions =
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
-
-  /** Assume gyro starts at zero. */
-  private Rotation2d gyroOffset = Rotation2d.kZero;
-
-  @Setter
-  @AutoLogOutput(key = "isPivotUp")
-  public boolean isPivotUp;
-
-  // -------------------------------------------------------------------------
-  // Chassis Speeds
-  // -------------------------------------------------------------------------
-
-  @Getter private ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-
-  @Setter @Getter private double gyroRotationsPerSecond;
-
-  // -------------------------------------------------------------------------
-  // Scoring & Shooting State
-  // -------------------------------------------------------------------------
-
-  @Getter private double RPMFudge = 1;
-  private final ValueCacher<Object, LaunchSetpoint> currentScoringSetpoint = new ValueCacher<>(() ->
-    LookupTables.getScoringSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
-  );
-
-  private final ValueCacher<Object, LaunchSetpoint> nextScoringSetpoint = new ValueCacher<>(() ->
-          LookupTables.getScoringSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
-  );
-
-  private final ValueCacher<Object, LaunchSetpoint> currentPassingSetpoint = new ValueCacher<>(() ->
-          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
-  );
-
-  private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
-          LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
-  );
-
-  private final LoggedTunableNumber desiredHoodDegrees = new LoggedTunableNumber("Desired Hood Degrees", 10);
-  private final LoggedTunableNumber desiredShooterRPM = new LoggedTunableNumber("Desired Shooter RPM", 0);
-
-  // -------------------------------------------------------------------------
-  // Miscellaneous Robot State
-  // -------------------------------------------------------------------------
-
-  private final PoseEstimator primaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
-  private final PoseEstimator secondaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
-
-  @Setter @Getter
-  private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
-
-  @Setter private boolean sendVisionToPrimaryPoseEstimator = true;
-
-  @Getter
-  @AutoLogOutput(key = "Intake Extension Fraction")
-  private double intakeExtensionFraction = 0.0;
-
-  @Accessors(fluent = true)
-  @Getter
-  private boolean useIntakeProtection = true;
-
-  private final Queue<Boolean> canIsConnected = new LinkedList<>();
-  private final Queue<Boolean> temperaturesAreFine = new LinkedList<>();
-
-  public static final Trigger disabled = RobotModeTriggers.disabled();
-
-  @Setter @Getter
-  private double pivotMechanismRotations = 0;
-
-  @Setter @Getter
-  private double verticalExtensionProportion = 0;
-
-  // -------------------------------------------------------------------------
-  // SmartDashboard / Field Display Objects
-  // -------------------------------------------------------------------------
-
-  private final Field2d robotFieldInternal = new Field2d();
-  private final Field2d robotFieldTrue = new Field2d();
-
-  // =========================================================================
-  // Lifecycle Methods
-  // =========================================================================
-
-  @Override
-  public void periodic() {
-    robotFieldInternal.setRobotPose(getEstimatedPose());
-    SmartDashboard.putData(ROBOT_FIELD_INTERNAL_KEY, robotFieldInternal);
-    robotFieldTrue.setRobotPose(getTrueOnFieldPose());
-    SmartDashboard.putData(ROBOT_FIELD_TRUE_KEY, robotFieldTrue);
-
-    SmartDashboard.putBoolean(
-        "CAN Measurements", canIsConnected.stream().allMatch(measurement -> measurement));
-    SmartDashboard.putBoolean(
-        "Motor Temperatures", temperaturesAreFine.stream().allMatch(measurement -> measurement));
-    SmartDashboard.putNumber("Distance To Goal", getDistanceToGoal());
-
-    canIsConnected.clear();
-    temperaturesAreFine.clear();
-  }
-
-  @Override
-  public void periodicAfterScheduler() {
-    Logger.recordOutput(ROBOT_FIELD_INTERNAL_KEY, getEstimatedPose());
-    Logger.recordOutput(ROBOT_FIELD_TRUE_KEY, getTrueOnFieldPose());
-    Logger.recordOutput("/Internal/Secondary", getSecondaryEstimatedPose());
-    if (!choreoSetpoints.getInternalBuffer().isEmpty()) {
-      Logger.recordOutput(
-          CHOREO_SETPOINT_KEY, choreoSetpoints.getInternalBuffer().lastEntry().getValue());
+    public static synchronized RobotState getInstance() {
+        return instance = Objects.requireNonNullElseGet(instance, RobotState::new);
     }
-  }
 
-  // =========================================================================
-  // Pose / Odometry Methods
-  // =========================================================================
+    // -------------------------------------------------------------------------
+    // Constants & Configuration
+    // -------------------------------------------------------------------------
 
-  public Pose2d getEstimatedPose() {
-    return primaryPoseEstimator.getEstimatedPose();
-  }
+    double poseBufferSizeSec = 2.0;
 
-  public Pose2d getSecondaryEstimatedPose() {
-    return secondaryPoseEstimator.getEstimatedPose();
-  }
+    // SmartDashboard / Logger keys
+    private final String ROBOT_FIELD_INTERNAL_KEY = "/Internal/Robot Pose";
+    private final String ROBOT_FIELD_TRUE_KEY = "/RobotState/Robot Pose";
+    private final String CHOREO_SETPOINT_KEY = "/Internal/Choreo Setpoint";
 
-  /**
-   * Returns the pose relative to the blue alliance wall. Should be used sparingly; for all internal
-   * calculations, use {@link RobotState#getEstimatedPose()} instead.
-   */
-  public Pose2d getTrueOnFieldPose() {
-    return AllianceFlipUtil.apply(getEstimatedPose());
-  }
+    // -------------------------------------------------------------------------
+    // Pose Buffers
+    // -------------------------------------------------------------------------
 
-  public void resetPose(Pose2d pose) {
-    primaryPoseEstimator.resetPose(pose);
-    secondaryPoseEstimator.resetPose(pose);
-    if (Constants.currentMode == Mode.SIM) SimRobot.getInstance().resetPose(pose);
-  }
+    private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
+            TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
 
-  public void resetGyro() {
-    resetPose(getEstimatedPose().withRotation(new Rotation2d()));
-  }
+    private final TimeInterpolatableBuffer<Pose2d> odometryBuffer =
+            TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
 
-  public void addOdometryObservation(
-      SwerveModulePosition[] wheelPositions, Optional<Rotation2d> gyroAngle, double timestamp) {
-    primaryPoseEstimator.addOdometryMeasurement(wheelPositions, gyroAngle, timestamp);
-    secondaryPoseEstimator.addOdometryMeasurement(wheelPositions, gyroAngle, timestamp);
-  }
+    private final TimeInterpolatableBuffer<Pose2d> choreoSetpoints =
+            TimeInterpolatableBuffer.createBuffer(0.05);
 
-  public void setChoreoSetpoint(Pose2d pose) {
-    choreoSetpoints.addSample(Timer.getTimestamp(), pose);
-  }
+    // -------------------------------------------------------------------------
+    // Odometry State
+    // -------------------------------------------------------------------------
 
-  public Pose3d[] getComponentPoses() {
-    return new Pose3d[] {};
-  }
+    private final SwerveDriveKinematics kinematics =
+            new SwerveDriveKinematics(Drive.getModuleTranslations());
 
-  // =========================================================================
-  // Vision Methods
-  // =========================================================================
+    private SwerveModulePosition[] lastWheelPositions =
+            new SwerveModulePosition[]{
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition()
+            };
 
-  @Override
-  public void accept(
-      int cameraIndex,
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    secondaryPoseEstimator.addVisionObservation(
-        cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters) , timestampSeconds, visionMeasurementStdDevs);
-    if (sendVisionToPrimaryPoseEstimator)
-      primaryPoseEstimator.addVisionObservation(
-          cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters), timestampSeconds, visionMeasurementStdDevs);
-  }
+    /**
+     * Assume gyro starts at zero.
+     */
+    private Rotation2d gyroOffset = Rotation2d.kZero;
 
-  // =========================================================================
-  // Chassis Speed Methods
-  // =========================================================================
+    @Setter
+    @AutoLogOutput(key = "isPivotUp")
+    public boolean isPivotUp;
 
-  public void updateChassisSpeeds(ChassisSpeeds chassisSpeeds) {
-    this.chassisSpeeds = chassisSpeeds;
-  }
+    // -------------------------------------------------------------------------
+    // Chassis Speeds
+    // -------------------------------------------------------------------------
 
-  // =========================================================================
-  // Hardware Health Methods
-  // =========================================================================
+    @Getter
+    private ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
-  public void acceptCANMeasurement(boolean isConnected) {
-    this.canIsConnected.add(isConnected);
-  }
+    @Setter
+    @Getter
+    private double gyroRotationsPerSecond;
 
-  public void acceptTemperatureMeasurement(double tempCelsius) {
-    this.temperaturesAreFine.add(tempCelsius < 100);
-  }
+    // -------------------------------------------------------------------------
+    // Scoring & Shooting State
+    // -------------------------------------------------------------------------
 
-  // =========================================================================
-  // LED Methods
-  // =========================================================================
+    @Getter
+    private double RPMFudge = 1;
+    private final ValueCacher<Object, LaunchSetpoint> currentScoringSetpoint = new ValueCacher<>(() ->
+            LookupTables.getScoringSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+    );
 
-  public LEDPattern getDesiredLEDPattern() {
-    return LEDPattern.BLANK;
-  }
+    private final ValueCacher<Object, LaunchSetpoint> nextScoringSetpoint = new ValueCacher<>(() ->
+            LookupTables.getScoringSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+    );
 
-  // launch setpoints
-  public LaunchSetpoint getScoringSetpoint(Object caller) {
-    var setpoint = currentScoringSetpoint.get(caller);
-    return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.drumRotationsPerMinute(), setpoint.hoodRotations());
-  }
+    private final ValueCacher<Object, LaunchSetpoint> currentPassingSetpoint = new ValueCacher<>(() ->
+            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+    );
 
-  public LaunchSetpoint getNextScoringSetpoint(Object caller) {
-      var setpoint = nextScoringSetpoint.get(caller);
-      return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.drumRotationsPerMinute(), setpoint.hoodRotations());
-  }
+    private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
+            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+    );
 
-  public LaunchSetpoint getPassingSetpoint(Object caller) {
-    return currentPassingSetpoint.get(caller);
-  }
+    private final LoggedTunableNumber desiredHoodDegrees = new LoggedTunableNumber("Desired Hood Degrees", 10);
+    private final LoggedTunableNumber desiredShooterRPM = new LoggedTunableNumber("Desired Shooter RPM", 0);
 
-  public LaunchSetpoint getNextPassingSetpoint(Object caller) {
-    return nextPassingSetpoint.get(caller);
-  }
+    // -------------------------------------------------------------------------
+    // Miscellaneous Robot State
+    // -------------------------------------------------------------------------
 
-  public double getDistanceToGoal() {
-      return getEstimatedPose().transformBy(Constants.RobotConstants.ORIGIN_TO_DRUM).getTranslation().getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
-  }
+    private final PoseEstimator primaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
+    private final PoseEstimator secondaryPoseEstimator = new PoseEstimator(poseBufferSizeSec);
+
+    @Setter
+    @Getter
+    private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
+
+    @Setter
+    private boolean sendVisionToPrimaryPoseEstimator = true;
+
+    @Getter
+    @AutoLogOutput(key = "Intake Extension Fraction")
+    private double intakeExtensionFraction = 0.0;
+
+    @Accessors(fluent = true)
+    @Getter
+    private boolean useIntakeProtection = true;
+
+    private final Queue<Boolean> canIsConnected = new LinkedList<>();
+    private final Queue<Boolean> temperaturesAreFine = new LinkedList<>();
+
+    public static final Trigger disabled = RobotModeTriggers.disabled();
+
+    @Setter
+    @Getter
+    private double pivotMechanismRotations = 0;
+
+    @Setter
+    @Getter
+    private double verticalExtensionProportion = 0;
+
+    // -------------------------------------------------------------------------
+    // SmartDashboard / Field Display Objects
+    // -------------------------------------------------------------------------
+
+    private final Field2d robotFieldInternal = new Field2d();
+    private final Field2d robotFieldTrue = new Field2d();
+
+    // =========================================================================
+    // Lifecycle Methods
+    // =========================================================================
+
+    @Override
+    public void periodic() {
+        robotFieldInternal.setRobotPose(getEstimatedPose());
+        SmartDashboard.putData(ROBOT_FIELD_INTERNAL_KEY, robotFieldInternal);
+        robotFieldTrue.setRobotPose(getTrueOnFieldPose());
+        SmartDashboard.putData(ROBOT_FIELD_TRUE_KEY, robotFieldTrue);
+
+        SmartDashboard.putBoolean(
+                "CAN Measurements", canIsConnected.stream().allMatch(measurement -> measurement));
+        SmartDashboard.putBoolean(
+                "Motor Temperatures", temperaturesAreFine.stream().allMatch(measurement -> measurement));
+        SmartDashboard.putNumber("Distance To Goal", getDistanceToGoal());
+
+        canIsConnected.clear();
+        temperaturesAreFine.clear();
+    }
+
+    @Override
+    public void periodicAfterScheduler() {
+        Logger.recordOutput(ROBOT_FIELD_INTERNAL_KEY, getEstimatedPose());
+        Logger.recordOutput(ROBOT_FIELD_TRUE_KEY, getTrueOnFieldPose());
+        Logger.recordOutput("/Internal/Secondary", getSecondaryEstimatedPose());
+        if (!choreoSetpoints.getInternalBuffer().isEmpty()) {
+            Logger.recordOutput(
+                    CHOREO_SETPOINT_KEY, choreoSetpoints.getInternalBuffer().lastEntry().getValue());
+        }
+    }
+
+    // =========================================================================
+    // Pose / Odometry Methods
+    // =========================================================================
+
+    public Pose2d getEstimatedPose() {
+        return primaryPoseEstimator.getEstimatedPose();
+    }
+
+    public Pose2d getSecondaryEstimatedPose() {
+        return secondaryPoseEstimator.getEstimatedPose();
+    }
+
+    /**
+     * Returns the pose relative to the blue alliance wall. Should be used sparingly; for all internal
+     * calculations, use {@link RobotState#getEstimatedPose()} instead.
+     */
+    public Pose2d getTrueOnFieldPose() {
+        return AllianceFlipUtil.apply(getEstimatedPose());
+    }
+
+    public void resetPose(Pose2d pose) {
+        primaryPoseEstimator.resetPose(pose);
+        secondaryPoseEstimator.resetPose(pose);
+        if (Constants.currentMode == Mode.SIM) SimRobot.getInstance().resetPose(pose);
+    }
+
+    public void resetGyro() {
+        resetPose(getEstimatedPose().withRotation(new Rotation2d()));
+    }
+
+    public void addOdometryObservation(
+            SwerveModulePosition[] wheelPositions, Optional<Rotation2d> gyroAngle, double timestamp) {
+        primaryPoseEstimator.addOdometryMeasurement(wheelPositions, gyroAngle, timestamp);
+        secondaryPoseEstimator.addOdometryMeasurement(wheelPositions, gyroAngle, timestamp);
+    }
+
+    public void setChoreoSetpoint(Pose2d pose) {
+        choreoSetpoints.addSample(Timer.getTimestamp(), pose);
+    }
+
+    public Pose3d[] getComponentPoses() {
+        return new Pose3d[]{};
+    }
+
+    // =========================================================================
+    // Vision Methods
+    // =========================================================================
+
+    @Override
+    public void accept(
+            int cameraIndex,
+            Pose2d visionRobotPoseMeters,
+            double timestampSeconds,
+            Matrix<N3, N1> visionMeasurementStdDevs) {
+        secondaryPoseEstimator.addVisionObservation(
+                cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters), timestampSeconds, visionMeasurementStdDevs);
+        if (sendVisionToPrimaryPoseEstimator)
+            primaryPoseEstimator.addVisionObservation(
+                    cameraIndex, AllianceFlipUtil.apply(visionRobotPoseMeters), timestampSeconds, visionMeasurementStdDevs);
+    }
+
+    // =========================================================================
+    // Chassis Speed Methods
+    // =========================================================================
+
+    public void updateChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+        this.chassisSpeeds = chassisSpeeds;
+    }
+
+    // =========================================================================
+    // Hardware Health Methods
+    // =========================================================================
+
+    public void acceptCANMeasurement(boolean isConnected) {
+        this.canIsConnected.add(isConnected);
+    }
+
+    public void acceptTemperatureMeasurement(double tempCelsius) {
+        this.temperaturesAreFine.add(tempCelsius < 100);
+    }
+
+    // =========================================================================
+    // LED Methods
+    // =========================================================================
+
+    public LEDPattern getDesiredLEDPattern() {
+        return LEDPattern.BLANK;
+    }
+
+    // launch setpoints
+    public LaunchSetpoint getScoringSetpoint(Object caller) {
+        var setpoint = currentScoringSetpoint.get(caller);
+        return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.hoodRotations(), setpoint.drumRotationsPerMinute());
+
+//        return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
+    }
+
+    public LaunchSetpoint getNextScoringSetpoint(Object caller) {
+        var setpoint = nextScoringSetpoint.get(caller);
+        return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.hoodRotations(), setpoint.drumRotationsPerMinute());
+
+//        return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
+    }
+
+    public LaunchSetpoint getPassingSetpoint(Object caller) {
+        return currentPassingSetpoint.get(caller);
+    }
+
+    public LaunchSetpoint getNextPassingSetpoint(Object caller) {
+        return nextPassingSetpoint.get(caller);
+    }
+
+    public double getDistanceToGoal() {
+        return getEstimatedPose().transformBy(Constants.RobotConstants.ORIGIN_TO_DRUM).getTranslation().getDistance(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+    }
 }

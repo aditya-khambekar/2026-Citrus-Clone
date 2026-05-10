@@ -23,12 +23,12 @@ public class DrumConfigs{
 
         config.Audio.BeepOnConfig = false;
 
-        config.Slot0.kP = 0.2;
+        config.Slot0.kP = 0.38628;
         config.Slot0.kI = 0;
-        config.Slot0.kD = 0.01;
-        config.Slot0.kS = 0.30292;
-        config.Slot0.kV = 0.14000;
-        config.Slot0.kA = 0.010403;
+        config.Slot0.kD = 0;
+        config.Slot0.kS = 0.060868;
+        config.Slot0.kV = 0.25613;
+        config.Slot0.kA = 0.036216;
 
         config.Feedback.SensorToMechanismRatio = 1.0 / DrumConstants.MOTOR_TO_DRUM_REDUCTION;
 

@@ -46,207 +46,220 @@ import org.team4639.lib.util.SysIDUtils;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  private final PortConfiguration portConfiguration = WaterBottle.portConfiguration;
+    private final PortConfiguration portConfiguration = WaterBottle.portConfiguration;
 
-  // Subsystems
-  private final Drive drive;
-  private final Vision vision;
+    // Subsystems
+    private final Drive drive;
+    private final Vision vision;
 
-  private final IntakeRollers intakeRollers;
-  private final Drum drum;
-  private final Hopper hopper;
-  private final Hood hood;
-  private final Feeder feeder;
-  private final Pivot pivot;
+    private final IntakeRollers intakeRollers;
+    private final Drum drum;
+    private final Hopper hopper;
+    private final Hood hood;
+    private final Feeder feeder;
+    private final Pivot pivot;
 
-  // Controller
-  private final CommandXboxController driver = OI.driver;
-  private final CommandXboxController operator = OI.operator;
+    // Controller
+    private final CommandXboxController driver = OI.driver;
+    private final CommandXboxController operator = OI.operator;
 
-  // Dashboard inputs
-  private final LoggedLazyAutoChooser autoChooser;
+    // Dashboard inputs
+    private final LoggedLazyAutoChooser autoChooser;
 
-  // actions
+    // actions
     private final Actions actions;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-         drive =
-             new Drive(
-                 new GyroIOPigeon2(),
-                 new ModuleIOTalonFX(TunerConstants.FrontLeft, TunerConstantsOverrides.overrides[0]),
-                 new ModuleIOTalonFX(TunerConstants.FrontRight, TunerConstantsOverrides.overrides[1]),
-                 new ModuleIOTalonFX(TunerConstants.BackLeft, TunerConstantsOverrides.overrides[2]),
-                 new ModuleIOTalonFX(TunerConstants.BackRight, TunerConstantsOverrides.overrides[3]),
-                 pose -> {});
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        switch (Constants.currentMode) {
+            case REAL:
+                drive =
+                        new Drive(
+                                new GyroIOPigeon2(),
+                                new ModuleIOTalonFX(TunerConstants.FrontLeft, TunerConstantsOverrides.overrides[0]),
+                                new ModuleIOTalonFX(TunerConstants.FrontRight, TunerConstantsOverrides.overrides[1]),
+                                new ModuleIOTalonFX(TunerConstants.BackLeft, TunerConstantsOverrides.overrides[2]),
+                                new ModuleIOTalonFX(TunerConstants.BackRight, TunerConstantsOverrides.overrides[3]),
+                                pose -> {
+                                });
 
-         vision =
-             new Vision(
-                 RobotState.getInstance(),
-                 new VisionIOLimelight4(
-                     "limelight-right",
-                     () -> RobotState.getInstance().getEstimatedPose().getRotation()));
+                vision =
+                        new Vision(
+                                RobotState.getInstance(),
+                                new VisionIOLimelight4(
+                                        "limelight-right",
+                                        () -> RobotState.getInstance().getEstimatedPose().getRotation()));
 
-        intakeRollers = new IntakeRollers(new IntakeRollersIOTalonFX(portConfiguration), RobotState.getInstance());
-        drum = new Drum(new DrumIOTalonFX(portConfiguration), RobotState.getInstance());
-        hopper = new Hopper(new HopperIOTalonFX(portConfiguration), RobotState.getInstance());
-        hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
-        feeder = new Feeder(new FeederIOTalonFX(portConfiguration), RobotState.getInstance());
-        pivot = new Pivot(new PivotIOTalonFX(portConfiguration), RobotState.getInstance());
+                intakeRollers = new IntakeRollers(new IntakeRollersIOTalonFX(portConfiguration), RobotState.getInstance());
+                drum = new Drum(new DrumIOTalonFX(portConfiguration), RobotState.getInstance());
+                hopper = new Hopper(new HopperIOTalonFX(portConfiguration), RobotState.getInstance());
+                hood = new Hood(new HoodIOTalonFX(portConfiguration), RobotState.getInstance());
+                feeder = new Feeder(new FeederIOTalonFX(portConfiguration), RobotState.getInstance());
+                pivot = new Pivot(new PivotIOTalonFX(portConfiguration), RobotState.getInstance());
 
-        actions = constructActions();
-        configureButtonBindings();
-        break;
+                actions = constructActions();
+                configureButtonBindings();
+                break;
 
-      case SIM:
-        SimRobot.getInstance().setupDriveSim();
+            case SIM:
+                SimRobot.getInstance().setupDriveSim();
 
-        drive =
-            new Drive(
-                new GyroIOSim(
-                    SimRobot.getInstance().getSwerveDriveSimulation().getGyroSimulation()),
-                new ModuleIOTalonFXSim(
-                    TunerConstants.FrontLeft,
-                    SimRobot.getInstance().getSwerveDriveSimulation().getModules()[0]),
-                new ModuleIOTalonFXSim(
-                    TunerConstants.FrontRight,
-                    SimRobot.getInstance().getSwerveDriveSimulation().getModules()[1]),
-                new ModuleIOTalonFXSim(
-                    TunerConstants.BackLeft,
-                    SimRobot.getInstance().getSwerveDriveSimulation().getModules()[2]),
-                new ModuleIOTalonFXSim(
-                    TunerConstants.BackRight,
-                    SimRobot.getInstance().getSwerveDriveSimulation().getModules()[3]),
-                SimRobot.getInstance()::resetPose);
+                drive =
+                        new Drive(
+                                new GyroIOSim(
+                                        SimRobot.getInstance().getSwerveDriveSimulation().getGyroSimulation()),
+                                new ModuleIOTalonFXSim(
+                                        TunerConstants.FrontLeft,
+                                        SimRobot.getInstance().getSwerveDriveSimulation().getModules()[0]),
+                                new ModuleIOTalonFXSim(
+                                        TunerConstants.FrontRight,
+                                        SimRobot.getInstance().getSwerveDriveSimulation().getModules()[1]),
+                                new ModuleIOTalonFXSim(
+                                        TunerConstants.BackLeft,
+                                        SimRobot.getInstance().getSwerveDriveSimulation().getModules()[2]),
+                                new ModuleIOTalonFXSim(
+                                        TunerConstants.BackRight,
+                                        SimRobot.getInstance().getSwerveDriveSimulation().getModules()[3]),
+                                SimRobot.getInstance()::resetPose);
 
-        // flip poses so that the vision sees the true on-field pose
-        vision =
-            new Vision(
-                RobotState.getInstance(),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name,
-                    VisionConstants.robotToCamera0,
-                    () ->
-                        SimRobot.getInstance()
-                            .getSwerveDriveSimulation()
-                            .getSimulatedDriveTrainPose()),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name,
-                    VisionConstants.robotToCamera1,
-                    () ->
-                        SimRobot.getInstance()
-                            .getSwerveDriveSimulation()
-                            .getSimulatedDriveTrainPose()));
+                // flip poses so that the vision sees the true on-field pose
+                vision =
+                        new Vision(
+                                RobotState.getInstance(),
+                                new VisionIOPhotonVisionSim(
+                                        VisionConstants.camera0Name,
+                                        VisionConstants.robotToCamera0,
+                                        () ->
+                                                SimRobot.getInstance()
+                                                        .getSwerveDriveSimulation()
+                                                        .getSimulatedDriveTrainPose()),
+                                new VisionIOPhotonVisionSim(
+                                        VisionConstants.camera1Name,
+                                        VisionConstants.robotToCamera1,
+                                        () ->
+                                                SimRobot.getInstance()
+                                                        .getSwerveDriveSimulation()
+                                                        .getSimulatedDriveTrainPose()));
 
-                            intakeRollers = new IntakeRollers(new IntakeRollersIO() {}, RobotState.getInstance());
-                            drum = new Drum(new DrumIO() {}, RobotState.getInstance());
-                            hopper = new Hopper(new HopperIO() {
+                intakeRollers = new IntakeRollers(new IntakeRollersIO() {
+                }, RobotState.getInstance());
+                drum = new Drum(new DrumIO() {
+                }, RobotState.getInstance());
+                hopper = new Hopper(new HopperIO() {
 
-                            }, RobotState.getInstance());
-                            hood = new Hood(new HoodIO() {
+                }, RobotState.getInstance());
+                hood = new Hood(new HoodIO() {
 
-                            }, RobotState.getInstance());
-          feeder = new Feeder(new FeederIO() {
-          }, RobotState.getInstance());
-          pivot = new Pivot(new PivotIO() {
+                }, RobotState.getInstance());
+                feeder = new Feeder(new FeederIO() {
+                }, RobotState.getInstance());
+                pivot = new Pivot(new PivotIO() {
 
-          }, RobotState.getInstance());
+                }, RobotState.getInstance());
 
-          actions = constructActions();
-        configureSimButtonBindings();
-        break;
+                actions = constructActions();
+                configureSimButtonBindings();
+                break;
 
-      default:
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                pose -> {});
+            default:
+                drive =
+                        new Drive(
+                                new GyroIO() {
+                                },
+                                new ModuleIO() {
+                                },
+                                new ModuleIO() {
+                                },
+                                new ModuleIO() {
+                                },
+                                new ModuleIO() {
+                                },
+                                pose -> {
+                                });
 
-        vision = new Vision(RobotState.getInstance());
+                vision = new Vision(RobotState.getInstance());
 
-        intakeRollers = new IntakeRollers(new IntakeRollersIO() {}, RobotState.getInstance());
-        drum = new Drum(new DrumIO() {}, RobotState.getInstance());
+                intakeRollers = new IntakeRollers(new IntakeRollersIO() {
+                }, RobotState.getInstance());
+                drum = new Drum(new DrumIO() {
+                }, RobotState.getInstance());
 
-        hopper = new Hopper(new HopperIO() {
+                hopper = new Hopper(new HopperIO() {
 
-                            }, RobotState.getInstance());
-        hood = new Hood(new HoodIO() {
+                }, RobotState.getInstance());
+                hood = new Hood(new HoodIO() {
 
-        }, RobotState.getInstance());
+                }, RobotState.getInstance());
 
-        feeder = new Feeder(new FeederIO() {
-        }, RobotState.getInstance());
+                feeder = new Feeder(new FeederIO() {
+                }, RobotState.getInstance());
 
-        actions = constructActions();
-        pivot = new Pivot(new PivotIO() {
+                actions = constructActions();
+                pivot = new Pivot(new PivotIO() {
 
-        }, RobotState.getInstance());
-        configureButtonBindings();
-        break;
+                }, RobotState.getInstance());
+                configureButtonBindings();
+                break;
+        }
+
+        // Set up auto routines
+        autoChooser = new LoggedLazyAutoChooser("Auto Choices");
     }
 
-    // Set up auto routines
-    autoChooser = new LoggedLazyAutoChooser("Auto Choices");
-  }
+    /**
+     * Use this method to define your button->command mappings. Buttons can be created by
+     * instantiating a {@link GenericHID} or one of its subclasses ({@link
+     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+     */
+    private void configureButtonBindings() {
+        // Default command, normal field-relative drive
+        drive.setDefaultCommand(
+                actions.joystickDrive()
+        );
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
-  private void configureButtonBindings() {
-    // Default command, normal field-relative drive
-    drive.setDefaultCommand(
-            actions.joystickDrive()
-    );
+        SuperstructureCommands.getScoringDummy().setDefaultCommand(actions.idleSuperstructure());
+        SuperstructureCommands.getIntakeDummy().setDefaultCommand(actions.stopIntake());
 
-    SuperstructureCommands.getScoringDummy().setDefaultCommand(actions.idleSuperstructure());
-    SuperstructureCommands.getIntakeDummy().setDefaultCommand(actions.stopIntake());
+        driver.rightTrigger().whileTrue(actions.teleopRequestScoring());
+        driver.rightBumper().whileTrue(actions.agitate());
 
-    driver.rightTrigger().whileTrue(actions.teleopRequestScoring());
-    driver.rightBumper().whileTrue(actions.agitate());
+        driver.leftTrigger().whileTrue(actions.teleopRequestPassing());
+        driver.leftBumper().whileTrue(actions.agitate());
 
-    driver.leftTrigger().whileTrue(actions.teleopRequestPassing());
-    driver.leftBumper().whileTrue(actions.agitate());
+        driver.a().onTrue(actions.intake());
+        driver.b().onTrue(actions.stopIntake());
 
-    driver.a().onTrue(actions.intake());
-    driver.b().onTrue(actions.stopIntake());
+        driver.povUp().onTrue(actions.pivotUp());
+        driver.povDown().onTrue(actions.pivotDown());
 
-    driver.povUp().onTrue(actions.pivotUp());
-    driver.povDown().onTrue(actions.pivotDown());
+        //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
+    }
 
-    //SysIDUtils.bind(driver, SysIDUtils.ButtonConfiguration.POV_UP_RIGHT_DOWN_LEFT, drum.getSysID().getRoutine());
-  }
+    private void configureSimButtonBindings() {
+        configureButtonBindings();
+    }
 
-  private void configureSimButtonBindings() {
-    configureButtonBindings();
-  }
+    /**
+     * Use this to pass the autonomous command to the main {@link Robot} class.
+     *
+     * @return the command to run in autonomous
+     */
+    public Command getAutonomousCommand() {
+        return autoChooser.get();
+    }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
-
-  private Actions constructActions() {
-      return Actions.builder()
-              .drive(drive)
-              .drum(drum)
-              .hood(hood)
-              .feeder(feeder)
-              .hopper(hopper)
-              .intakeRollers(intakeRollers)
-              .pivot(pivot)
-              .build();
-  }
+    private Actions constructActions() {
+        return Actions.builder()
+                .drive(drive)
+                .drum(drum)
+                .hood(hood)
+                .feeder(feeder)
+                .hopper(hopper)
+                .intakeRollers(intakeRollers)
+                .pivot(pivot)
+                .build();
+    }
 }

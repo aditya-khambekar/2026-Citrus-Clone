@@ -25,33 +25,16 @@ public class LookupTables {
 
     public static final InterpolatingDoubleTreeMap scoringDistanceToRPM =
             InterpolatingDoubleTreeMap.ofEntries(
-                    new AbstractMap.SimpleImmutableEntry<>(1.77, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.0, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.4, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.7, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.1, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.50, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.80, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.10, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.41, 1570.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.77, 1650.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.90, 1725.0),
-                    new AbstractMap.SimpleImmutableEntry<>(5.20, 1800.0));
+                    new AbstractMap.SimpleImmutableEntry<>(2.5, 1680.0),
+                    new AbstractMap.SimpleImmutableEntry<>(3.3, 1750.0),
+                    new AbstractMap.SimpleImmutableEntry<>(4.0, 1800.0)
+            );
 
     public static final InterpolatingDoubleTreeMap scoringDistanceToHoodDegrees =
             InterpolatingDoubleTreeMap.ofEntries(
-                    new AbstractMap.SimpleImmutableEntry<>(1.77, 15.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.0, 19.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.4, 25.0),
-                    new AbstractMap.SimpleImmutableEntry<>(2.7, 27.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.1, 31.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.3, 34.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.7, 37.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.10, 40.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.5, 43.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.77, 43.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.90, 43.0),
-                    new AbstractMap.SimpleImmutableEntry<>(5.20, 43.0));
+                    new AbstractMap.SimpleImmutableEntry<>(2.5, 22.0),
+                    new AbstractMap.SimpleImmutableEntry<>(3.3, 23.0),
+                    new AbstractMap.SimpleImmutableEntry<>(4.0, 25.0));
 
     public static final InterpolatingDoubleTreeMap scoringDistanceToTOF =
             InterpolatingDoubleTreeMap.ofEntries(

@@ -5,6 +5,7 @@ package org.team4639.frc2026.subsystems.drum;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
@@ -30,7 +31,7 @@ public class Drum extends FullSubsystem {
     private double MANUAL_RPM = 0;
 
     @Getter
-    private final DrumSysID sysID = new DrumSysID.DrumSysIDWPI(this, inputs);
+    private final DrumSysID sysID = new DrumSysID.DrumSysIDCTRE(this, inputs);
 
     private record DrumSetpoint(double mechanismRotationsPerMinute, double mechanismRotationsPerMinutePerSecond){
         static DrumSetpoint IDLE = new DrumSetpoint(0.0, 0.0);
@@ -52,6 +53,7 @@ public class Drum extends FullSubsystem {
         MANUAL
     }
 
+    @Setter
     private WantedState wantedState = WantedState.OFF;
     private SystemState systemState = SystemState.OFF;
 
@@ -112,10 +114,6 @@ public class Drum extends FullSubsystem {
         io.setSetpointMechanismRPM(setpoint.mechanismRotationsPerMinute, setpoint.mechanismRotationsPerMinutePerSecond);
     }
 
-    public void setWantedState(WantedState wantedState) {
-        this.wantedState = wantedState;
-    }
-
     public boolean atSetpoint() {
         return MathUtil.isNear(getSetpoint().mechanismRotationsPerMinute, inputs.mechanismRPM[0], SHOOTING_RPM_TOLERANCE);
     }
@@ -142,7 +140,7 @@ public class Drum extends FullSubsystem {
                 var nextSetpoint = state.getNextScoringSetpoint(this);
                 var rotationsPerMinute = desiredSetpoint.drumRotationsPerMinute();
                 var rotationsPerMinutePerSecond = (nextSetpoint.drumRotationsPerMinute() - rotationsPerMinute) / 0.02;
-
+                SmartDashboard.putNumberArray("Drum Setpoint", new double[] {rotationsPerMinute, rotationsPerMinutePerSecond});
                 yield new DrumSetpoint(rotationsPerMinute, rotationsPerMinutePerSecond);
             }
             case PASSING -> {
