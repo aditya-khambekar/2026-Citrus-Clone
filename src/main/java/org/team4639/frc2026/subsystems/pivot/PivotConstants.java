@@ -16,8 +16,7 @@ public class PivotConstants {
 
     public static final double IDLE_MECHANISM_ROTATIONS = -0.3;
 
-    public static final double STOWED_ENCODER_POSITION = -0.376953;
-    public static final double DOWN_MECHANISM_POSITION = 0.70;
+    public static final double DOWN_MECHANISM_ROTATIONS = 0.70;
     public static final double UP_MECHANISM_ROTATIONS = -0.01;
 
     // Volts per MECHANISM rotation

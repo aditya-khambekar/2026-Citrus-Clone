@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import org.team4639.frc2026.auto.AutoCommands;
 import org.team4639.frc2026.commands.Actions;
 import org.team4639.frc2026.commands.factory.DriveCommands;
 import org.team4639.frc2026.commands.factory.SuperstructureCommands;
@@ -125,23 +126,7 @@ public class RobotContainer {
                                 SimRobot.getInstance()::resetPose);
 
                 // flip poses so that the vision sees the true on-field pose
-                vision =
-                        new Vision(
-                                RobotState.getInstance(),
-                                new VisionIOPhotonVisionSim(
-                                        VisionConstants.camera0Name,
-                                        VisionConstants.robotToCamera0,
-                                        () ->
-                                                SimRobot.getInstance()
-                                                        .getSwerveDriveSimulation()
-                                                        .getSimulatedDriveTrainPose()),
-                                new VisionIOPhotonVisionSim(
-                                        VisionConstants.camera1Name,
-                                        VisionConstants.robotToCamera1,
-                                        () ->
-                                                SimRobot.getInstance()
-                                                        .getSwerveDriveSimulation()
-                                                        .getSimulatedDriveTrainPose()));
+                vision = new Vision(RobotState.getInstance());
 
                 intakeRollers = new IntakeRollers(new IntakeRollersIO() {
                 }, RobotState.getInstance());
@@ -206,6 +191,22 @@ public class RobotContainer {
 
         // Set up auto routines
         autoChooser = new LoggedLazyAutoChooser("Auto Choices");
+
+        autoChooser.addOption("OP_LEFT", () -> AutoCommands.OP_LEFT(
+                        drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
+                .withTimeout(20));
+
+        autoChooser.addOption("OP_RIGHT", () -> AutoCommands.OP_RIGHT(
+                        drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
+                .withTimeout(20));
+
+        autoChooser.addOption("OP_NEAR_LEFT", () -> AutoCommands.OP_NEAR_LEFT(
+                        drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
+                .withTimeout(20));
+
+        autoChooser.addOption("OP_NEAR_RIGHT", () -> AutoCommands.OP_NEAR_RIGHT(
+                        drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
+                .withTimeout(20));
     }
 
     /**

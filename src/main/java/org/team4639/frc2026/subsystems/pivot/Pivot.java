@@ -2,6 +2,7 @@
 
 package org.team4639.frc2026.subsystems.pivot;
 
+import edu.wpi.first.math.Pair;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -55,7 +56,7 @@ public class Pivot extends FullSubsystem {
         io.updateInputs(inputs);
         Logger.processInputs("Pivot", inputs);
         state.setPivotMechanismRotations(inputs.mechanismRotations);
-        state.isPivotUp = inputs.encoderRotations < (PivotConstants.UP_ENCODER_POSITION + PivotConstants.DOWN_ENCODER_POSITION) / 2.0;
+        state.isPivotUp = inputs.encoderRotations < (PivotConstants.UP_MECHANISM_ROTATIONS + PivotConstants.DOWN_MECHANISM_ROTATIONS) / 2.0;
     }
 
     @Override
@@ -65,6 +66,7 @@ public class Pivot extends FullSubsystem {
 
     @Override
     public void periodicAfterScheduler() {
+        state.setExtensionStates(new Pair<>(this.wantedState, this.systemState));
         state.acceptCANMeasurement(inputs.connected);
         state.acceptTemperatureMeasurement(inputs.celsius);
     }
@@ -98,11 +100,11 @@ public class Pivot extends FullSubsystem {
     }
 
     private void handleDown() {
-        io.setSetpointEncoderRotations(PivotConstants.DOWN_ENCODER_POSITION);
+        io.setSetpointEncoderRotations(PivotConstants.DOWN_MECHANISM_ROTATIONS);
     }
 
     private void handleIdle() {
-        io.setSetpointEncoderRotations(PivotConstants.UP_ENCODER_POSITION);
+        io.setSetpointEncoderRotations(PivotConstants.UP_MECHANISM_ROTATIONS);
     }
 
     private void handleManual() {

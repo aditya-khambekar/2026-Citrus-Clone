@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.933256578947368,
-        "y": 5.23702850877193
+        "x": 5.531186992738188,
+        "y": 5.599764793807265
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.885175438596491,
-        "y": 5.563980263157894
+        "x": 5.054450431034484,
+        "y": 5.735625
       },
       "isLocked": false,
       "linkedName": "OPLCYC2"
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 3.0,
     "maxAcceleration": 6.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 115.2777222355529
+    "rotation": -43.37566803234644
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 1.0,
-    "rotation": 104.42077312751091
+    "velocity": 4.0,
+    "rotation": -56.087031909819125
   },
   "useDefaultConstraints": false
 }

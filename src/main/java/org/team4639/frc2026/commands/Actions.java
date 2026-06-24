@@ -125,15 +125,15 @@ public class Actions {
     }
 
     public Command stopIntake() {
-        return SuperstructureCommands.stopIntake(intakeRollers);
+        return SuperstructureCommands.stop(intakeRollers);
     }
 
     public Command pivotDown() {
-        return SuperstructureCommands.pivotDown(pivot);
+        return SuperstructureCommands.extend(pivot);
     }
 
     public Command pivotUp() {
-        return SuperstructureCommands.pivotUp(pivot);
+        return SuperstructureCommands.retract(pivot);
     }
 
     public Command agitate() {

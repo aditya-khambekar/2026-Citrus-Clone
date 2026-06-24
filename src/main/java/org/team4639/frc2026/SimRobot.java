@@ -60,7 +60,8 @@ public class SimRobot extends VirtualSubsystem {
     arena.setEfficiencyMode(false);
     SimulatedArena.overrideInstance(arena);
     SimulatedArena.getInstance().addDriveTrainSimulation(this.swerveDriveSimulation);
-    SimulatedArena.getInstance().resetFieldForAuto();
+    SimulatedArena.getInstance().clearGamePieces();
+//    SimulatedArena.getInstance().resetFieldForAuto();
   }
 
   public void resetPose(Pose2d pose) {

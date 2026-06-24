@@ -3,6 +3,7 @@
 package org.team4639.frc2026;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -15,6 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import java.security.cert.Extension;
 import java.util.*;
 
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -29,6 +31,7 @@ import org.team4639.frc2026.Constants.Mode;
 import org.team4639.frc2026.constants.launch.LaunchSetpoint;
 import org.team4639.frc2026.constants.launch.LookupTables;
 import org.team4639.frc2026.subsystems.drive.Drive;
+import org.team4639.frc2026.subsystems.pivot.Pivot;
 import org.team4639.frc2026.subsystems.vision.Vision.VisionConsumer;
 import org.team4639.lib.util.ValueCacher;
 import org.team4639.lib.led.pattern.LEDPattern;
@@ -175,6 +178,10 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
     @Setter
     @Getter
     private double pivotMechanismRotations = 0;
+
+    @Setter
+    @Getter
+    private Pair<Pivot.WantedState, Pivot.SystemState> extensionStates;
 
     @Setter
     @Getter

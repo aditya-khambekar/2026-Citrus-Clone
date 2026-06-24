@@ -17,15 +17,21 @@ import org.team4639.frc2026.subsystems.hopper.Hopper;
 import org.team4639.frc2026.subsystems.intakeRollers.IntakeRollers;
 import org.team4639.frc2026.subsystems.pivot.Pivot;
 
+import java.security.cert.Extension;
+
 public class SuperstructureCommands {
     @Getter
-    private static final SubsystemBase scoringDummy = new SubsystemBase() {};
+    private static final SubsystemBase scoringDummy = new SubsystemBase() {
+    };
     @Getter
-    private static final SubsystemBase intakeDummy = new SubsystemBase() {};
+    private static final SubsystemBase intakeDummy = new SubsystemBase() {
+    };
     @Getter
-    private static final SubsystemBase pivotDummy = new SubsystemBase() {};
+    private static final SubsystemBase pivotDummy = new SubsystemBase() {
+    };
     @Getter
-    private static final SubsystemBase extensionDummy = new SubsystemBase() {};
+    private static final SubsystemBase extensionDummy = new SubsystemBase() {
+    };
 
     private static final double AGITATE_PERIOD = 1.0;
 
@@ -40,6 +46,7 @@ public class SuperstructureCommands {
                 Commands.idle(scoringDummy)
         );
     }
+
     public static Command scoringSpinup(Drum drum, Hood hood, Feeder feeder, Hopper hopper) {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
@@ -97,7 +104,7 @@ public class SuperstructureCommands {
         );
     }
 
-    public static Command stopIntake(IntakeRollers intakeRollers) {
+    public static Command stop(IntakeRollers intakeRollers) {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     intakeRollers.setWantedState(IntakeRollers.WantedState.IDLE);
@@ -115,7 +122,7 @@ public class SuperstructureCommands {
         );
     }
 
-    public static Command pivotUp(Pivot pivot){
+    public static Command retract(Pivot pivot) {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     pivot.setWantedState(Pivot.WantedState.IDLE);
@@ -124,7 +131,7 @@ public class SuperstructureCommands {
         );
     }
 
-    public static Command pivotDown(Pivot pivot){
+    public static Command extend(Pivot pivot) {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     pivot.setWantedState(Pivot.WantedState.DOWN);
@@ -135,16 +142,23 @@ public class SuperstructureCommands {
 
     public static Command pivotUpDown(Pivot pivot) {
         return new SequentialCommandGroup(
-                pivotUp(pivot).withTimeout(AGITATE_PERIOD/2.0),
-                pivotDown(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+                retract(pivot).withTimeout(AGITATE_PERIOD / 2.0),
+                extend(pivot).withTimeout(AGITATE_PERIOD / 2.0)
         ).repeatedly();
     }
 
     public static Command pivotDownUp(Pivot pivot) {
         return new SequentialCommandGroup(
-                pivotDown(pivot).withTimeout(AGITATE_PERIOD/2.0),
-                pivotUp(pivot).withTimeout(AGITATE_PERIOD / 2.0)
+                extend(pivot).withTimeout(AGITATE_PERIOD / 2.0),
+                retract(pivot).withTimeout(AGITATE_PERIOD / 2.0)
         ).repeatedly();
+    }
+
+    public static Command agitate(Pivot extension) {
+        return Commands.either(
+                pivotUpDown(extension),
+                pivotDownUp(extension),
+                () -> RobotState.getInstance().getExtensionStates().getFirst() == Pivot.WantedState.IDLE);
     }
 
     private static Hood.WantedState avoidTrench(Hood.WantedState desiredState, RobotState state) {
