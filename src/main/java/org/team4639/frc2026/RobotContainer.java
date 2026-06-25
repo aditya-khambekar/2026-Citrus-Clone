@@ -194,19 +194,19 @@ public class RobotContainer {
 
         autoChooser.addOption("OP_LEFT", () -> AutoCommands.OP_LEFT(
                         drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
-                .withTimeout(20));
+                .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
 
         autoChooser.addOption("OP_RIGHT", () -> AutoCommands.OP_RIGHT(
                         drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
-                .withTimeout(20));
+                .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
 
         autoChooser.addOption("OP_NEAR_LEFT", () -> AutoCommands.OP_NEAR_LEFT(
                         drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
-                .withTimeout(20));
+                .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
 
         autoChooser.addOption("OP_NEAR_RIGHT", () -> AutoCommands.OP_NEAR_RIGHT(
                         drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
-                .withTimeout(20));
+                .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
     }
 
     /**

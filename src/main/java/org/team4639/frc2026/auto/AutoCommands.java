@@ -86,7 +86,7 @@ public class AutoCommands {
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
                 new ParallelDeadlineGroup(
-                        Commands.waitSeconds(3),
+                        Commands.waitSeconds(2.5),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -97,7 +97,9 @@ public class AutoCommands {
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
                         )),
-                followPath("OPL-4", false, true, state)
+                new ParallelDeadlineGroup(
+                        followPath("OPL-4", false, true, state),
+                        SuperstructureCommands.idle(drum, hood, feeder, hopper))
         );
     }
 
@@ -157,7 +159,7 @@ public class AutoCommands {
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
                 new ParallelDeadlineGroup(
-                        Commands.waitSeconds(3),
+                        Commands.waitSeconds(2.5),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -168,7 +170,9 @@ public class AutoCommands {
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
                         )),
-                followPathMirrored("OPL-4", false, true, state)
+                new ParallelDeadlineGroup(
+                        followPathMirrored("OPL-4", false, true, state),
+                        SuperstructureCommands.idle(drum, hood, feeder, hopper))
         );
     }
 
@@ -228,7 +232,7 @@ public class AutoCommands {
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
                 new ParallelDeadlineGroup(
-                        Commands.waitSeconds(3),
+                        Commands.waitSeconds(2.5),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -239,7 +243,9 @@ public class AutoCommands {
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
                         )),
-                followPath("OPL-4", false, true, state)
+                new ParallelDeadlineGroup(
+                        followPath("OPL-4", false, true, state),
+                        SuperstructureCommands.idle(drum, hood, feeder, hopper))
         );
     }
 
@@ -299,7 +305,7 @@ public class AutoCommands {
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
                 new ParallelDeadlineGroup(
-                        Commands.waitSeconds(3),
+                        Commands.waitSeconds(2.5),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -310,7 +316,9 @@ public class AutoCommands {
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
                         )),
-                followPathMirrored("OPL-4", false, true, state)
+                new ParallelDeadlineGroup(
+                        followPathMirrored("OPL-4", false, true, state),
+                        SuperstructureCommands.idle(drum, hood, feeder, hopper))
         );
     }
 

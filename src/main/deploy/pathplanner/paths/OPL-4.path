@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.623559928443649,
+        "y": 6.038837209302326
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.8131896551724145,
+        "y": 5.364224137931035
+      },
+      "isLocked": false,
+      "linkedName": "OPLCYC2_END"
+    },
+    {
+      "anchor": {
+        "x": 7.146023706896552,
+        "y": 5.491282327586207
+      },
+      "prevControl": {
+        "x": 6.266390086206896,
+        "y": 5.2567133620689654
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.49566473988439297,
+      "rotationDegrees": -39.19260542244651
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 6.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -141.519801751657
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -43.37566803234644
+  },
+  "useDefaultConstraints": true
+}
