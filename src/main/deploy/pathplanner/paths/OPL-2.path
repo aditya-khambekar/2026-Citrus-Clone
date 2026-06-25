@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.194892241380623,
-        "y": 7.377607758615942
+        "x": 7.1000773632618195,
+        "y": 7.487691863683827
       },
       "isLocked": false,
       "linkedName": "OPLST2"
@@ -20,12 +20,12 @@
         "y": 6.176064169111289
       },
       "prevControl": {
-        "x": 7.820010668291825,
-        "y": 6.9745783613898285
+        "x": 7.898600026591546,
+        "y": 6.897650096072652
       },
       "nextControl": {
-        "x": 6.54669818596444,
-        "y": 4.177154924071523
+        "x": 6.360123504460698,
+        "y": 4.38630811099651
       },
       "isLocked": false,
       "linkedName": null
@@ -36,12 +36,12 @@
         "y": 4.152284482757511
       },
       "prevControl": {
-        "x": 6.353542285768953,
-        "y": 4.023389528822764
+        "x": 6.314271865007694,
+        "y": 3.9736899491475812
       },
       "nextControl": {
-        "x": 5.875867614552102,
-        "y": 4.310816553096576
+        "x": 5.96439192808846,
+        "y": 4.330879016367441
       },
       "isLocked": false,
       "linkedName": null
@@ -52,8 +52,8 @@
         "y": 5.599764793807265
       },
       "prevControl": {
-        "x": 6.930538329385538,
-        "y": 5.1985072549682165
+        "x": 6.883448288653567,
+        "y": 5.599764793807265
       },
       "nextControl": null,
       "isLocked": false,
@@ -74,12 +74,12 @@
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 1.4241435562805886,
-      "maxWaypointRelativePos": 2.456769983686784,
+      "maxWaypointRelativePos": 2.3099510603588893,
       "constraints": {
         "maxVelocity": 1.5,
-        "maxAcceleration": 6.0,
+        "maxAcceleration": 4.0,
         "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
+        "maxAngularAcceleration": 360.0,
         "nominalVoltage": 12.0,
         "unlimited": false
       }

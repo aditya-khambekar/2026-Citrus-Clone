@@ -28,7 +28,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class AutoCommands {
 
-    public static final double EXTEND_INTAKE_METERS_PAST_LINE = 0.5;
+    public static final double EXTEND_INTAKE_METERS_PAST_LINE = 0.25;
 
     public static Command OP_LEFT(
             Drive drive,
@@ -85,7 +85,8 @@ public class AutoCommands {
                         }),
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
-                new ParallelCommandGroup(
+                new ParallelDeadlineGroup(
+                        Commands.waitSeconds(3),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -95,7 +96,9 @@ public class AutoCommands {
                                         SuperstructureCommands.score(drum, hood, feeder, hopper)
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
-                        )));
+                        )),
+                followPath("OPL-4", false, true, state)
+        );
     }
 
     public static Command OP_RIGHT(
@@ -153,7 +156,8 @@ public class AutoCommands {
                         }),
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
-                new ParallelCommandGroup(
+                new ParallelDeadlineGroup(
+                        Commands.waitSeconds(3),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -163,7 +167,9 @@ public class AutoCommands {
                                         SuperstructureCommands.score(drum, hood, feeder, hopper)
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
-                        )));
+                        )),
+                followPathMirrored("OPL-4", false, true, state)
+        );
     }
 
     public static Command OP_NEAR_LEFT(
@@ -221,7 +227,8 @@ public class AutoCommands {
                         }),
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
-                new ParallelCommandGroup(
+                new ParallelDeadlineGroup(
+                        Commands.waitSeconds(3),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -231,7 +238,9 @@ public class AutoCommands {
                                         SuperstructureCommands.score(drum, hood, feeder, hopper)
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
-                        )));
+                        )),
+                followPath("OPL-4", false, true, state)
+        );
     }
 
     public static Command OP_NEAR_RIGHT(
@@ -289,7 +298,8 @@ public class AutoCommands {
                         }),
                         SuperstructureCommands.scoringSpinup(drum, hood, feeder, hopper),
                         SuperstructureCommands.intake(intake)),
-                new ParallelCommandGroup(
+                new ParallelDeadlineGroup(
+                        Commands.waitSeconds(3),
                         DriveCommands.autoScoringAlign(drive),
                         SuperstructureCommands.agitate(pivot),
                         new RepeatCommand(
@@ -299,7 +309,9 @@ public class AutoCommands {
                                         SuperstructureCommands.score(drum, hood, feeder, hopper)
                                                 .until(() -> !DriveCommands.atScoringGoal())
                                 )
-                        )));
+                        )),
+                followPathMirrored("OPL-4", false, true, state)
+        );
     }
 
     /**
