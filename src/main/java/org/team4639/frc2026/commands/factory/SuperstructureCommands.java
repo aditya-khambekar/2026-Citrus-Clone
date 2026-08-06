@@ -154,11 +154,12 @@ public class SuperstructureCommands {
         ).repeatedly();
     }
 
-    public static Command agitate(Pivot extension) {
+    public static Command agitate(Pivot pivot) {
         return Commands.either(
-                pivotUpDown(extension),
-                pivotDownUp(extension),
-                () -> RobotState.getInstance().getExtensionStates().getFirst() == Pivot.WantedState.IDLE);
+                SuperstructureCommands.pivotDownUp(pivot),
+                SuperstructureCommands.pivotUpDown(pivot),
+                () -> RobotState.getInstance().isPivotUp
+        );
     }
 
     private static Hood.WantedState avoidTrench(Hood.WantedState desiredState, RobotState state) {

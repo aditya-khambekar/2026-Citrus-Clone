@@ -207,6 +207,11 @@ public class RobotContainer {
         autoChooser.addOption("OP_NEAR_RIGHT", () -> AutoCommands.OP_NEAR_RIGHT(
                         drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
                 .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
+
+        autoChooser.addOption("PRELOAD-AUTO", () -> AutoCommands.PRELOAD_AUTO(
+                        drive, drum, hood, hopper, feeder, pivot, intakeRollers, RobotState.getInstance())
+                .withTimeout(20).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper).alongWith(Commands.runOnce(drive::stopWithX))));
+
     }
 
     /**

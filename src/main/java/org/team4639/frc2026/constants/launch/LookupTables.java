@@ -25,14 +25,22 @@ public class LookupTables {
 
     public static final InterpolatingDoubleTreeMap scoringDistanceToRPM =
             InterpolatingDoubleTreeMap.ofEntries(
-                    new AbstractMap.SimpleImmutableEntry<>(2.5, 1680.0),
-                    new AbstractMap.SimpleImmutableEntry<>(3.3, 1750.0),
-                    new AbstractMap.SimpleImmutableEntry<>(4.0, 1800.0)
+                    new AbstractMap.SimpleImmutableEntry<>(1.8, 1605.0),
+                    new AbstractMap.SimpleImmutableEntry<>(2.15, 1625.0),
+                    new AbstractMap.SimpleImmutableEntry<>(2.5, 1700.0),
+                    new AbstractMap.SimpleImmutableEntry<>(2.63, 1720.0),
+                    new AbstractMap.SimpleImmutableEntry<>(3.0, 1750.0),
+                    new AbstractMap.SimpleImmutableEntry<>(3.3, 1770.0),
+                    new AbstractMap.SimpleImmutableEntry<>(4.0, 1850.0)
             );
 
     public static final InterpolatingDoubleTreeMap scoringDistanceToHoodDegrees =
             InterpolatingDoubleTreeMap.ofEntries(
+                    new AbstractMap.SimpleImmutableEntry<>(1.8, 18.0),
+                    new AbstractMap.SimpleImmutableEntry<>(2.15, 18.0),
                     new AbstractMap.SimpleImmutableEntry<>(2.5, 22.0),
+                    new AbstractMap.SimpleImmutableEntry<>(2.63, 22.5),
+                    new AbstractMap.SimpleImmutableEntry<>(3.0, 22.5),
                     new AbstractMap.SimpleImmutableEntry<>(3.3, 23.0),
                     new AbstractMap.SimpleImmutableEntry<>(4.0, 25.0));
 

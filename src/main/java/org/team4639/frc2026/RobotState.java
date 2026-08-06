@@ -18,6 +18,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.security.cert.Extension;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -30,6 +32,7 @@ import org.littletonrobotics.junction.Logger;
 import org.team4639.frc2026.Constants.Mode;
 import org.team4639.frc2026.constants.launch.LaunchSetpoint;
 import org.team4639.frc2026.constants.launch.LookupTables;
+import org.team4639.frc2026.constants.launch.PassingTargets;
 import org.team4639.frc2026.subsystems.drive.Drive;
 import org.team4639.frc2026.subsystems.pivot.Pivot;
 import org.team4639.frc2026.subsystems.vision.Vision.VisionConsumer;
@@ -138,11 +141,21 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
     );
 
     private final ValueCacher<Object, LaunchSetpoint> currentPassingSetpoint = new ValueCacher<>(() ->
-            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose(), getSetpointSpeeds(),
+            getSecondaryEstimatedPose()
+                .nearest(Stream.of(PassingTargets.LEFT, PassingTargets.RIGHT)
+                .map(t -> {return new Pose2d(t, Rotation2d.kZero);})
+                .collect(Collectors.toSet()))
+                .getTranslation())
     );
 
     private final ValueCacher<Object, LaunchSetpoint> nextPassingSetpoint = new ValueCacher<>(() ->
-            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(), FieldConstants.Hub.innerCenterPoint.toTranslation2d())
+            LookupTables.getPassingSetpoint(getSecondaryEstimatedPose().exp(ChassisSpeeds.fromFieldRelativeSpeeds(getChassisSpeeds(), getSecondaryEstimatedPose().getRotation()).toTwist2d(0.02)), getSetpointSpeeds(),
+                getSecondaryEstimatedPose()
+                .nearest(Stream.of(PassingTargets.LEFT, PassingTargets.RIGHT)
+                .map(t -> {return new Pose2d(t, Rotation2d.kZero);})
+                .collect(Collectors.toSet()))
+                .getTranslation())
     );
 
     private final LoggedTunableNumber desiredHoodDegrees = new LoggedTunableNumber("Desired Hood Degrees", 10);
@@ -320,14 +333,14 @@ public class RobotState extends VirtualSubsystem implements VisionConsumer {
         var setpoint = currentScoringSetpoint.get(caller);
         return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.hoodRotations(), setpoint.drumRotationsPerMinute());
 
-//        return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
+    //    return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
     }
 
     public LaunchSetpoint getNextScoringSetpoint(Object caller) {
         var setpoint = nextScoringSetpoint.get(caller);
         return new LaunchSetpoint(setpoint.drivetrainRotations(), setpoint.hoodRotations(), setpoint.drumRotationsPerMinute());
 
-//        return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
+    //    return new LaunchSetpoint(setpoint.drivetrainRotations(), desiredHoodDegrees.get() / 360, desiredShooterRPM.get());
     }
 
     public LaunchSetpoint getPassingSetpoint(Object caller) {

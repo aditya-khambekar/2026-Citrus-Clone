@@ -28,7 +28,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class AutoCommands {
 
-    public static final double EXTEND_INTAKE_METERS_PAST_LINE = 0.25;
+    public static final double EXTEND_INTAKE_METERS_PAST_LINE = 0;
 
     public static Command OP_LEFT(
             Drive drive,
@@ -64,7 +64,8 @@ public class AutoCommands {
                                 setRotationOverride(drive, state),
                                 Commands.waitSeconds(0.5),
                                 SuperstructureCommands.score(drum, hood, feeder, hopper)
-                                        .alongWith(SuperstructureCommands.agitate(pivot)),
+                                        .alongWith(SuperstructureCommands.agitate(pivot))
+                                        .withTimeout(Seconds.of(2)).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper)),
                                 SuperstructureCommands.intake(intake))),
                 new ParallelDeadlineGroup(
                         followPath("OPL-2", false, true, state),
@@ -137,7 +138,8 @@ public class AutoCommands {
                                 setRotationOverride(drive, state),
                                 Commands.waitSeconds(0.5),
                                 SuperstructureCommands.score(drum, hood, feeder, hopper)
-                                        .alongWith(SuperstructureCommands.agitate(pivot)),
+                                        .alongWith(SuperstructureCommands.agitate(pivot))
+                                        .withTimeout(2).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper)),
                                 SuperstructureCommands.intake(intake))),
                 new ParallelDeadlineGroup(
                         followPathMirrored("OPL-2", false, true, state),
@@ -210,7 +212,8 @@ public class AutoCommands {
                                 setRotationOverride(drive, state),
                                 Commands.waitSeconds(0.5),
                                 SuperstructureCommands.score(drum, hood, feeder, hopper)
-                                        .alongWith(SuperstructureCommands.agitate(pivot)),
+                                        .alongWith(SuperstructureCommands.agitate(pivot))
+                                        .withTimeout(2).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper)),
                                 SuperstructureCommands.intake(intake))),
                 new ParallelDeadlineGroup(
                         followPath("OPL-2", false, true, state),
@@ -283,7 +286,8 @@ public class AutoCommands {
                                 setRotationOverride(drive, state),
                                 Commands.waitSeconds(0.5),
                                 SuperstructureCommands.score(drum, hood, feeder, hopper)
-                                        .alongWith(SuperstructureCommands.agitate(pivot)),
+                                        .alongWith(SuperstructureCommands.agitate(pivot))
+                                        .withTimeout(2).andThen(SuperstructureCommands.idle(drum, hood, feeder, hopper)),
                                 SuperstructureCommands.intake(intake))),
                 new ParallelDeadlineGroup(
                         followPathMirrored("OPL-2", false, true, state),
@@ -321,6 +325,21 @@ public class AutoCommands {
                         SuperstructureCommands.idle(drum, hood, feeder, hopper))
         );
     }
+
+    public static Command PRELOAD_AUTO(Drive drive,
+            Drum drum,
+            Hood hood,
+            Hopper hopper,
+            Feeder feeder,
+            Pivot pivot,
+            IntakeRollers intake,
+            RobotState state){
+                return new SequentialCommandGroup(
+                        followPath("MOV-BAC", true, true, state),
+                        Commands.waitSeconds(2.5).alongWith(drive.run(drive::stopWithX)),
+                        SuperstructureCommands.score(drum, hood, feeder, hopper)
+                );
+            }
 
     /**
      * Follow PathPlanner path. If this is the start of an auto routine, then reset

@@ -100,20 +100,15 @@ public class Actions {
 
     public Command teleopRequestPassing(){
         return new ParallelCommandGroup(
-                DriveCommands.joystickDriveWhilePassing(
-                        drive,
-                        () -> -driver.getLeftY(),
-                        () -> -driver.getLeftX()
-                ),
                 new SequentialCommandGroup(
                         SuperstructureCommands.passingSpinup(drum, hood, feeder, hopper)
                                 .until(drum::aboveSetpoint),
                         new RepeatCommand(
                                 new SequentialCommandGroup(
                                         SuperstructureCommands.passingSpinup(drum, hood, feeder, hopper)
-                                                .until(DriveCommands::atPassingGoal),
+                                                .until(drum::aboveSetpoint),
                                         SuperstructureCommands.pass(drum, hood, feeder, hopper)
-                                                .until(() -> !DriveCommands.atPassingGoal())
+                                                .until(() -> !drum.aboveSetpoint())
                                 )
                         )
                 )

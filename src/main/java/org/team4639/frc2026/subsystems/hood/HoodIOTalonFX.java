@@ -64,7 +64,6 @@ public class HoodIOTalonFX implements HoodIO {
 
     @Override
     public void setSetpointMechanismRotations(double mechanismRotations, double mechanismRotationsPerSecond) {
-        System.out.println("Hood Setpoint "+mechanismRotations);
          positionVoltage.Position = mechanismRotations;
          positionVoltage.Velocity = mechanismRotationsPerSecond;
         var output = hoodController.calculate(hoodPosition.getValueAsDouble(), mechanismRotations);
@@ -92,7 +91,6 @@ public class HoodIOTalonFX implements HoodIO {
 
     @Override
     public void setVoltage(double volts) {
-        System.out.println("Hood Volts "+volts);
         voltageOut.Output = volts;
         hoodMotor.setControl(voltageOut);
     }

@@ -11,8 +11,7 @@ import org.team4639.frc2026.subsystems.vision.VisionIO.PoseObservation;
 
 @Getter
 public enum VisionFilters {
-  AMBIGUITY(observation -> observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity),
-  TAG_COUNT(observation -> observation.tagCount() < 2),
+  TAG_COUNT(observation -> observation.tagCount() < 1),
   MAX_Z_ERROR(observation -> Math.abs(observation.pose().getZ()) > maxZError),
   FIELD_BOUNDARIES(
       observation ->
